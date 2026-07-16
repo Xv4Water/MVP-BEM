@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   LayoutDashboard,
   Store,
@@ -16,6 +16,9 @@ import {
   Edit,
   Trash,
   ChevronRight,
+  ArrowLeft,
+  Save,
+  CalendarDays,
 } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
@@ -70,6 +73,22 @@ const heutigesDatum = () =>
     month: 'long',
     year: 'numeric',
   })
+
+// Deutsche Monatsnamen (Index 0 = Januar)
+const MONATE = [
+  'Januar',
+  'Februar',
+  'März',
+  'April',
+  'Mai',
+  'Juni',
+  'Juli',
+  'August',
+  'September',
+  'Oktober',
+  'November',
+  'Dezember',
+]
 
 /* -------------------------------------------------------------------------- */
 /*  NAVIGATION                                                                */
@@ -130,7 +149,9 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-4 py-4">
           {NAV_LINKS.map(({ key, label, icon: Icon }) => {
-            const isActive = activeView === key
+            const isActive =
+              activeView === key ||
+              (key === 'personal' && activeView === 'personal-detail')
             return (
               <button
                 key={key}
@@ -375,7 +396,7 @@ function DashboardView({ onNeuerMitarbeiter, onNeuesGeschaeft }) {
 /*  PERSONALVERWALTUNG-ANSICHT                                                */
 /* -------------------------------------------------------------------------- */
 
-function PersonalView({ mitarbeiter, onDelete }) {
+function PersonalView({ mitarbeiter, onDelete, onView }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -409,15 +430,19 @@ function PersonalView({ mitarbeiter, onDelete }) {
               {mitarbeiter.map((m) => (
                 <tr key={m.id} className="transition-colors hover:bg-slate-50">
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => onView(m.id)}
+                      className="flex items-center gap-3 text-left"
+                      title="Details ansehen"
+                    >
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-xs font-bold text-white">
                         {m.firstName[0]}
                         {m.lastName[0]}
                       </div>
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-slate-900 hover:text-indigo-600 hover:underline">
                         {m.firstName} {m.lastName}
                       </span>
-                    </div>
+                    </button>
                   </td>
                   <td className="px-6 py-4 text-slate-600">{m.position}</td>
                   <td className="px-6 py-4">
@@ -431,6 +456,14 @@ function PersonalView({ mitarbeiter, onDelete }) {
                   <td className="px-6 py-4 text-slate-600">{m.hours} Std.</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => onView(m.id)}
+                        className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                        aria-label={`${m.firstName} ${m.lastName} – Monatsdaten erfassen`}
+                        title="Monatsdaten erfassen"
+                      >
+                        <CalendarDays className="h-4 w-4" />
+                      </button>
                       <button
                         className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
                         aria-label={`${m.firstName} ${m.lastName} bearbeiten`}
@@ -463,6 +496,227 @@ function PersonalView({ mitarbeiter, onDelete }) {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  MITARBEITER-DETAILANSICHT                                                 */
+/*  Monat/Jahr auswählen und Gehalt + Arbeitsstunden dafür erfassen           */
+/* -------------------------------------------------------------------------- */
+
+function MitarbeiterDetailView({ mitarbeiter, eintraege, onSpeichern, onLoeschen, onZurueck }) {
+  const heute = new Date()
+  const [jahr, setJahr] = useState(heute.getFullYear())
+  const [monat, setMonat] = useState(heute.getMonth())
+  const [gehaltInput, setGehaltInput] = useState(String(mitarbeiter.salary))
+  const [stundenInput, setStundenInput] = useState(String(mitarbeiter.hours))
+  const [gespeichertHinweis, setGespeichertHinweis] = useState(false)
+
+  // Beim Wechsel von Monat/Jahr die Felder mit einem bestehenden Eintrag
+  // vorbefüllen – andernfalls mit den Basiswerten des Mitarbeiters.
+  useEffect(() => {
+    const bestehenderEintrag = eintraege.find(
+      (e) => e.jahr === jahr && e.monat === monat,
+    )
+    setGehaltInput(String(bestehenderEintrag ? bestehenderEintrag.gehalt : mitarbeiter.salary))
+    setStundenInput(String(bestehenderEintrag ? bestehenderEintrag.stunden : mitarbeiter.hours))
+    setGespeichertHinweis(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jahr, monat])
+
+  // Bestätigungshinweis nach dem Speichern automatisch wieder ausblenden
+  useEffect(() => {
+    if (!gespeichertHinweis) return
+    const timer = setTimeout(() => setGespeichertHinweis(false), 2500)
+    return () => clearTimeout(timer)
+  }, [gespeichertHinweis])
+
+  const jahresOptionen = useMemo(() => {
+    const startJahr = heute.getFullYear() - 2
+    return Array.from({ length: 5 }, (_, i) => startJahr + i)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const verlaufSortiert = useMemo(
+    () =>
+      [...eintraege].sort((a, b) => b.jahr - a.jahr || b.monat - a.monat),
+    [eintraege],
+  )
+
+  const handleSpeichern = (event) => {
+    event.preventDefault()
+    onSpeichern(mitarbeiter.id, jahr, monat, Number(gehaltInput), Number(stundenInput))
+    setGespeichertHinweis(true)
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Zurück-Button + Mitarbeiterkopf */}
+      <div>
+        <button
+          onClick={onZurueck}
+          className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück zur Personalverwaltung
+        </button>
+
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-lg font-bold text-white">
+            {mitarbeiter.firstName[0]}
+            {mitarbeiter.lastName[0]}
+          </div>
+          <div className="mr-auto">
+            <h2 className="text-lg font-bold text-slate-900">
+              {mitarbeiter.firstName} {mitarbeiter.lastName}
+            </h2>
+            <p className="text-sm text-slate-500">
+              {mitarbeiter.position} · {getStoreName(mitarbeiter.storeId)}
+            </p>
+          </div>
+          <div className="flex gap-6 text-sm">
+            <div>
+              <p className="text-slate-400">Basisgehalt</p>
+              <p className="font-semibold text-slate-900">{formatEuro(mitarbeiter.salary)}</p>
+            </div>
+            <div>
+              <p className="text-slate-400">Basisstunden</p>
+              <p className="font-semibold text-slate-900">{mitarbeiter.hours} Std./Woche</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Formular: Monatsdaten erfassen */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900">Monatsdaten erfassen</h3>
+          <p className="text-sm text-slate-500">
+            Kalendermonat und Jahr auswählen, um Gehalt und Arbeitsstunden einzutragen.
+          </p>
+
+          <form onSubmit={handleSpeichern} className="mt-5 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Monat
+                </label>
+                <select
+                  value={monat}
+                  onChange={(e) => setMonat(Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                >
+                  {MONATE.map((name, index) => (
+                    <option key={name} value={index}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Jahr
+                </label>
+                <select
+                  value={jahr}
+                  onChange={(e) => setJahr(Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                >
+                  {jahresOptionen.map((j) => (
+                    <option key={j} value={j}>
+                      {j}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Gehalt (€)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="10"
+                required
+                value={gehaltInput}
+                onChange={(e) => setGehaltInput(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Arbeitsstunden
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                required
+                value={stundenInput}
+                onChange={(e) => setStundenInput(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="submit"
+                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+              >
+                <Save className="h-4 w-4" />
+                Eintrag speichern
+              </button>
+              {gespeichertHinweis && (
+                <span className="text-sm font-medium text-emerald-600">
+                  ✓ Gespeichert für {MONATE[monat]} {jahr}
+                </span>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* Verlauf der erfassten Monatsdaten */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900">Erfasste Monatsdaten</h3>
+          <p className="text-sm text-slate-500">Verlauf für {mitarbeiter.firstName} {mitarbeiter.lastName}</p>
+
+          <div className="mt-5 space-y-3">
+            {verlaufSortiert.length === 0 && (
+              <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
+                Noch keine Monatsdaten erfasst.
+              </p>
+            )}
+
+            {verlaufSortiert.map((e) => (
+              <div
+                key={`${e.jahr}-${e.monat}`}
+                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {MONATE[e.monat]} {e.jahr}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatEuro(e.gehalt)} · {e.stunden} Std.
+                  </p>
+                </div>
+                <button
+                  onClick={() => onLoeschen(mitarbeiter.id, e.jahr, e.monat)}
+                  className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                  aria-label={`Eintrag ${MONATE[e.monat]} ${e.jahr} löschen`}
+                  title="Eintrag löschen"
+                >
+                  <Trash className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -598,11 +852,46 @@ export default function App() {
   const [activeView, setActiveView] = useState('dashboard')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mitarbeiter, setMitarbeiter] = useState(MITARBEITER)
+  const [selectedMitarbeiterId, setSelectedMitarbeiterId] = useState(null)
+
+  // Monatsdaten je Mitarbeiter: { [mitarbeiterId]: [{ jahr, monat, gehalt, stunden }] }
+  const [monatsDaten, setMonatsDaten] = useState({})
 
   // Mitarbeiter löschen (aus dem State entfernen)
   const handleDelete = (id) => {
     setMitarbeiter((prev) => prev.filter((m) => m.id !== id))
   }
+
+  const handleMitarbeiterAnsehen = (id) => {
+    setSelectedMitarbeiterId(id)
+    setActiveView('personal-detail')
+  }
+
+  // Monatseintrag (Gehalt + Arbeitsstunden) für einen Mitarbeiter speichern
+  // oder – falls für den Monat/Jahr bereits vorhanden – aktualisieren
+  const handleMonatSpeichern = (mitarbeiterId, jahr, monat, gehalt, stunden) => {
+    setMonatsDaten((prev) => {
+      const bestehendeEintraege = prev[mitarbeiterId] ?? []
+      const ohneAktuellenMonat = bestehendeEintraege.filter(
+        (e) => !(e.jahr === jahr && e.monat === monat),
+      )
+      return {
+        ...prev,
+        [mitarbeiterId]: [...ohneAktuellenMonat, { jahr, monat, gehalt, stunden }],
+      }
+    })
+  }
+
+  const handleMonatLoeschen = (mitarbeiterId, jahr, monat) => {
+    setMonatsDaten((prev) => ({
+      ...prev,
+      [mitarbeiterId]: (prev[mitarbeiterId] ?? []).filter(
+        (e) => !(e.jahr === jahr && e.monat === monat),
+      ),
+    }))
+  }
+
+  const selectedMitarbeiter = mitarbeiter.find((m) => m.id === selectedMitarbeiterId)
 
   const renderView = () => {
     switch (activeView) {
@@ -616,13 +905,38 @@ export default function App() {
       case 'standorte':
         return <StandorteView />
       case 'personal':
-        return <PersonalView mitarbeiter={mitarbeiter} onDelete={handleDelete} />
+        return (
+          <PersonalView
+            mitarbeiter={mitarbeiter}
+            onDelete={handleDelete}
+            onView={handleMitarbeiterAnsehen}
+          />
+        )
+      case 'personal-detail':
+        if (!selectedMitarbeiter) {
+          setActiveView('personal')
+          return null
+        }
+        return (
+          <MitarbeiterDetailView
+            mitarbeiter={selectedMitarbeiter}
+            eintraege={monatsDaten[selectedMitarbeiter.id] ?? []}
+            onSpeichern={handleMonatSpeichern}
+            onLoeschen={handleMonatLoeschen}
+            onZurueck={() => setActiveView('personal')}
+          />
+        )
       case 'einstellungen':
         return <EinstellungenView />
       default:
         return null
     }
   }
+
+  const headerTitel =
+    activeView === 'personal-detail' && selectedMitarbeiter
+      ? `${selectedMitarbeiter.firstName} ${selectedMitarbeiter.lastName}`
+      : VIEW_TITEL[activeView]
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
@@ -634,10 +948,7 @@ export default function App() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header
-          title={VIEW_TITEL[activeView]}
-          onMenuClick={() => setMobileOpen(true)}
-        />
+        <Header title={headerTitel} onMenuClick={() => setMobileOpen(true)} />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">{renderView()}</main>
       </div>
