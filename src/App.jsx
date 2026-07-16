@@ -22,6 +22,8 @@ import {
   Lock,
   User,
   AlertCircle,
+  BarChart3,
+  TrendingUp,
 } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
@@ -101,6 +103,7 @@ const NAV_LINKS = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'geschaefte', label: 'Geschäfte', icon: Store },
   { key: 'personal', label: 'Personal', icon: Users },
+  { key: 'statistik', label: 'Statistik', icon: BarChart3 },
   { key: 'einstellungen', label: 'Einstellungen', icon: Settings },
 ]
 
@@ -256,7 +259,8 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
           {NAV_LINKS.map(({ key, label, icon: Icon }) => {
             const isActive =
               activeView === key ||
-              (key === 'personal' && activeView === 'personal-detail')
+              (key === 'personal' && activeView === 'personal-detail') ||
+              (key === 'geschaefte' && activeView === 'geschaeft-detail')
             return (
               <button
                 key={key}
@@ -846,7 +850,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 /*  Geschäfte anzeigen sowie modular hinzufügen und löschen                   */
 /* -------------------------------------------------------------------------- */
 
-function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen }) {
+function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onAnsehen }) {
   const [formularOffen, setFormularOffen] = useState(false)
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
@@ -951,19 +955,29 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen }) 
                     <p className="text-sm text-slate-500">{g.city}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => onLoeschen(g.id)}
-                  disabled={anzahl > 0}
-                  className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                  aria-label={`${g.name} löschen`}
-                  title={
-                    anzahl > 0
-                      ? 'Zuerst Mitarbeiter einem anderen Geschäft zuordnen'
-                      : 'Geschäft löschen'
-                  }
-                >
-                  <Trash className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onAnsehen(g.id)}
+                    className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                    aria-label={`${g.name} – Umsatz erfassen`}
+                    title="Umsatz erfassen"
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => onLoeschen(g.id)}
+                    disabled={anzahl > 0}
+                    className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                    aria-label={`${g.name} löschen`}
+                    title={
+                      anzahl > 0
+                        ? 'Zuerst Mitarbeiter einem anderen Geschäft zuordnen'
+                        : 'Geschäft löschen'
+                    }
+                  >
+                    <Trash className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
                 <span className="text-sm text-slate-500">Mitarbeiter</span>
@@ -978,6 +992,373 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen }) 
             Keine Geschäfte vorhanden. Legen Sie über „Neues Geschäft" das erste an.
           </p>
         )}
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  GESCHÄFT-DETAILANSICHT                                                    */
+/*  Monat/Jahr auswählen und Umsatz dafür erfassen                           */
+/* -------------------------------------------------------------------------- */
+
+function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeichern, onLoeschen, onZurueck }) {
+  const heute = new Date()
+  const [jahr, setJahr] = useState(heute.getFullYear())
+  const [monat, setMonat] = useState(heute.getMonth())
+  const [umsatzInput, setUmsatzInput] = useState('')
+  const [gespeichertHinweis, setGespeichertHinweis] = useState(false)
+
+  // Beim Wechsel von Monat/Jahr das Feld mit einem bestehenden Eintrag
+  // vorbefüllen – andernfalls leer lassen.
+  useEffect(() => {
+    const bestehenderEintrag = eintraege.find(
+      (e) => e.jahr === jahr && e.monat === monat,
+    )
+    setUmsatzInput(bestehenderEintrag ? String(bestehenderEintrag.umsatz) : '')
+    setGespeichertHinweis(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jahr, monat])
+
+  // Bestätigungshinweis nach dem Speichern automatisch wieder ausblenden
+  useEffect(() => {
+    if (!gespeichertHinweis) return
+    const timer = setTimeout(() => setGespeichertHinweis(false), 2500)
+    return () => clearTimeout(timer)
+  }, [gespeichertHinweis])
+
+  const jahresOptionen = useMemo(() => {
+    const startJahr = heute.getFullYear() - 2
+    return Array.from({ length: 5 }, (_, i) => startJahr + i)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const verlaufSortiert = useMemo(
+    () =>
+      [...eintraege].sort((a, b) => b.jahr - a.jahr || b.monat - a.monat),
+    [eintraege],
+  )
+
+  const handleSpeichern = (event) => {
+    event.preventDefault()
+    if (umsatzInput === '') return
+    onSpeichern(geschaeft.id, jahr, monat, Number(umsatzInput))
+    setGespeichertHinweis(true)
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Zurück-Button + Geschäftskopf */}
+      <div>
+        <button
+          onClick={onZurueck}
+          className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück zu Geschäfte
+        </button>
+
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <Store className="h-7 w-7" />
+          </div>
+          <div className="mr-auto">
+            <h2 className="text-lg font-bold text-slate-900">{geschaeft.name}</h2>
+            <p className="text-sm text-slate-500">{geschaeft.city}</p>
+          </div>
+          <div className="text-sm">
+            <p className="text-slate-400">Mitarbeiter</p>
+            <p className="font-semibold text-slate-900">{mitarbeiterAnzahl}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Formular: Umsatz erfassen */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900">Umsatz erfassen</h3>
+          <p className="text-sm text-slate-500">
+            Kalendermonat und Jahr auswählen, um den Umsatz einzutragen.
+          </p>
+
+          <form onSubmit={handleSpeichern} className="mt-5 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Monat
+                </label>
+                <select
+                  value={monat}
+                  onChange={(e) => setMonat(Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                >
+                  {MONATE.map((name, index) => (
+                    <option key={name} value={index}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Jahr
+                </label>
+                <select
+                  value={jahr}
+                  onChange={(e) => setJahr(Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                >
+                  {jahresOptionen.map((j) => (
+                    <option key={j} value={j}>
+                      {j}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Umsatz (€)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="100"
+                required
+                value={umsatzInput}
+                onChange={(e) => setUmsatzInput(e.target.value)}
+                placeholder="z. B. 24000"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="submit"
+                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+              >
+                <Save className="h-4 w-4" />
+                Eintrag speichern
+              </button>
+              {gespeichertHinweis && (
+                <span className="text-sm font-medium text-emerald-600">
+                  ✓ Gespeichert für {MONATE[monat]} {jahr}
+                </span>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* Verlauf des erfassten Umsatzes */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900">Erfasster Umsatz</h3>
+          <p className="text-sm text-slate-500">Verlauf für {geschaeft.name}</p>
+
+          <div className="mt-5 space-y-3">
+            {verlaufSortiert.length === 0 && (
+              <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
+                Noch kein Umsatz erfasst.
+              </p>
+            )}
+
+            {verlaufSortiert.map((e) => (
+              <div
+                key={`${e.jahr}-${e.monat}`}
+                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {MONATE[e.monat]} {e.jahr}
+                  </p>
+                  <p className="text-xs text-slate-500">{formatEuro(e.umsatz)}</p>
+                </div>
+                <button
+                  onClick={() => onLoeschen(geschaeft.id, e.jahr, e.monat)}
+                  className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                  aria-label={`Eintrag ${MONATE[e.monat]} ${e.jahr} löschen`}
+                  title="Eintrag löschen"
+                >
+                  <Trash className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  STATISTIK-ANSICHT                                                         */
+/*  Umsätze, Löhne und Arbeitsstunden je Jahr und Monat berechnet             */
+/* -------------------------------------------------------------------------- */
+
+function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
+  const heute = new Date()
+  const [jahr, setJahr] = useState(heute.getFullYear())
+
+  const jahresOptionen = useMemo(() => {
+    const startJahr = heute.getFullYear() - 3
+    return Array.from({ length: 6 }, (_, i) => startJahr + i)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Für jeden Monat des gewählten Jahres Umsatz, Löhne und Arbeitsstunden
+  // aus den erfassten Daten berechnen. Ohne konkreten Monatseintrag wird
+  // beim Gehalt/Stunden auf die Basiswerte des Mitarbeiters zurückgegriffen.
+  const monatsStatistik = useMemo(() => {
+    return MONATE.map((name, monatIndex) => {
+      const umsatz = geschaefte.reduce((summe, g) => {
+        const eintrag = (umsatzDaten[g.id] ?? []).find(
+          (e) => e.jahr === jahr && e.monat === monatIndex,
+        )
+        return summe + (eintrag ? eintrag.umsatz : 0)
+      }, 0)
+
+      const loehne = mitarbeiter.reduce((summe, m) => {
+        const eintrag = (monatsDaten[m.id] ?? []).find(
+          (e) => e.jahr === jahr && e.monat === monatIndex,
+        )
+        return summe + (eintrag ? eintrag.gehalt : m.salary)
+      }, 0)
+
+      const arbeitsstunden = mitarbeiter.reduce((summe, m) => {
+        const eintrag = (monatsDaten[m.id] ?? []).find(
+          (e) => e.jahr === jahr && e.monat === monatIndex,
+        )
+        return summe + (eintrag ? eintrag.stunden : m.hours)
+      }, 0)
+
+      return { monat: monatIndex, name, umsatz, loehne, arbeitsstunden, gewinn: umsatz - loehne }
+    })
+  }, [geschaefte, mitarbeiter, monatsDaten, umsatzDaten, jahr])
+
+  const jahresSumme = useMemo(
+    () =>
+      monatsStatistik.reduce(
+        (summe, m) => ({
+          umsatz: summe.umsatz + m.umsatz,
+          loehne: summe.loehne + m.loehne,
+          arbeitsstunden: summe.arbeitsstunden + m.arbeitsstunden,
+          gewinn: summe.gewinn + m.gewinn,
+        }),
+        { umsatz: 0, loehne: 0, arbeitsstunden: 0, gewinn: 0 },
+      ),
+    [monatsStatistik],
+  )
+
+  const maxUmsatz = Math.max(...monatsStatistik.map((m) => m.umsatz), 1)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Statistik</h2>
+          <p className="text-sm text-slate-500">
+            Umsätze, Löhne und Arbeitsstunden je Monat
+          </p>
+        </div>
+        <div>
+          <select
+            value={jahr}
+            onChange={(e) => setJahr(Number(e.target.value))}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          >
+            {jahresOptionen.map((j) => (
+              <option key={j} value={j}>
+                {j}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Jahres-KPIs */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          icon={TrendingUp}
+          label={`Umsatz ${jahr}`}
+          value={formatEuro(jahresSumme.umsatz)}
+          hint="Summe aller Geschäfte"
+          accent="bg-indigo-50 text-indigo-600"
+        />
+        <KpiCard
+          icon={Wallet}
+          label={`Löhne ${jahr}`}
+          value={formatEuro(jahresSumme.loehne)}
+          hint="Bruttogehälter gesamt"
+          accent="bg-amber-50 text-amber-600"
+        />
+        <KpiCard
+          icon={Clock}
+          label={`Arbeitsstunden ${jahr}`}
+          value={`${jahresSumme.arbeitsstunden.toLocaleString('de-DE')} Std.`}
+          hint="Summe pro Woche × Monate"
+          accent="bg-rose-50 text-rose-600"
+        />
+        <KpiCard
+          icon={BarChart3}
+          label={`Gewinn ${jahr}`}
+          value={formatEuro(jahresSumme.gewinn)}
+          hint="Umsatz abzüglich Löhne"
+          accent={
+            jahresSumme.gewinn >= 0
+              ? 'bg-emerald-50 text-emerald-600'
+              : 'bg-rose-50 text-rose-600'
+          }
+        />
+      </div>
+
+      {/* Monatsübersicht */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-6 py-4 font-semibold">Monat</th>
+                <th className="px-6 py-4 font-semibold">Umsatz</th>
+                <th className="px-6 py-4 font-semibold">Löhne</th>
+                <th className="px-6 py-4 font-semibold">Arbeitsstunden</th>
+                <th className="px-6 py-4 text-right font-semibold">Gewinn</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {monatsStatistik.map((m) => (
+                <tr key={m.monat} className="transition-colors hover:bg-slate-50">
+                  <td className="px-6 py-4 font-medium text-slate-900">{m.name}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="w-24 shrink-0 tabular-nums text-slate-700">
+                        {formatEuro(m.umsatz)}
+                      </span>
+                      <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                          style={{ width: `${(m.umsatz / maxUmsatz) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 tabular-nums text-slate-700">
+                    {formatEuro(m.loehne)}
+                  </td>
+                  <td className="px-6 py-4 tabular-nums text-slate-700">
+                    {m.arbeitsstunden.toLocaleString('de-DE')} Std.
+                  </td>
+                  <td
+                    className={`px-6 py-4 text-right font-medium tabular-nums ${
+                      m.gewinn >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                    }`}
+                  >
+                    {formatEuro(m.gewinn)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
@@ -1060,6 +1441,7 @@ const VIEW_TITEL = {
   dashboard: 'Dashboard',
   geschaefte: 'Geschäfte',
   personal: 'Personalverwaltung',
+  statistik: 'Statistik',
   einstellungen: 'Einstellungen',
 }
 
@@ -1070,9 +1452,13 @@ export default function App() {
   const [mitarbeiter, setMitarbeiter] = useState(MITARBEITER)
   const [geschaefte, setGeschaefte] = useState(GESCHAEFTE)
   const [selectedMitarbeiterId, setSelectedMitarbeiterId] = useState(null)
+  const [selectedGeschaeftId, setSelectedGeschaeftId] = useState(null)
 
   // Monatsdaten je Mitarbeiter: { [mitarbeiterId]: [{ jahr, monat, gehalt, stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
+
+  // Umsatzdaten je Geschäft: { [geschaeftId]: [{ jahr, monat, umsatz }] }
+  const [umsatzDaten, setUmsatzDaten] = useState({})
 
   const handleAbmelden = () => {
     setIstAngemeldet(false)
@@ -1099,6 +1485,35 @@ export default function App() {
   // Geschäft löschen (aus dem State entfernen)
   const handleGeschaeftLoeschen = (id) => {
     setGeschaefte((prev) => prev.filter((g) => g.id !== id))
+  }
+
+  const handleGeschaeftAnsehen = (id) => {
+    setSelectedGeschaeftId(id)
+    setActiveView('geschaeft-detail')
+  }
+
+  // Umsatzeintrag für ein Geschäft speichern oder – falls für den
+  // Monat/Jahr bereits vorhanden – aktualisieren
+  const handleUmsatzSpeichern = (geschaeftId, jahr, monat, umsatz) => {
+    setUmsatzDaten((prev) => {
+      const bestehendeEintraege = prev[geschaeftId] ?? []
+      const ohneAktuellenMonat = bestehendeEintraege.filter(
+        (e) => !(e.jahr === jahr && e.monat === monat),
+      )
+      return {
+        ...prev,
+        [geschaeftId]: [...ohneAktuellenMonat, { jahr, monat, umsatz }],
+      }
+    })
+  }
+
+  const handleUmsatzLoeschen = (geschaeftId, jahr, monat) => {
+    setUmsatzDaten((prev) => ({
+      ...prev,
+      [geschaeftId]: (prev[geschaeftId] ?? []).filter(
+        (e) => !(e.jahr === jahr && e.monat === monat),
+      ),
+    }))
   }
 
   const handleMitarbeiterAnsehen = (id) => {
@@ -1131,6 +1546,7 @@ export default function App() {
   }
 
   const selectedMitarbeiter = mitarbeiter.find((m) => m.id === selectedMitarbeiterId)
+  const selectedGeschaeft = geschaefte.find((g) => g.id === selectedGeschaeftId)
 
   const renderView = () => {
     switch (activeView) {
@@ -1150,6 +1566,24 @@ export default function App() {
             mitarbeiter={mitarbeiter}
             onHinzufuegen={handleGeschaeftHinzufuegen}
             onLoeschen={handleGeschaeftLoeschen}
+            onAnsehen={handleGeschaeftAnsehen}
+          />
+        )
+      case 'geschaeft-detail':
+        if (!selectedGeschaeft) {
+          setActiveView('geschaefte')
+          return null
+        }
+        return (
+          <GeschaeftDetailView
+            geschaeft={selectedGeschaeft}
+            mitarbeiterAnzahl={
+              mitarbeiter.filter((m) => m.storeId === selectedGeschaeft.id).length
+            }
+            eintraege={umsatzDaten[selectedGeschaeft.id] ?? []}
+            onSpeichern={handleUmsatzSpeichern}
+            onLoeschen={handleUmsatzLoeschen}
+            onZurueck={() => setActiveView('geschaefte')}
           />
         )
       case 'personal':
@@ -1176,6 +1610,15 @@ export default function App() {
             onZurueck={() => setActiveView('personal')}
           />
         )
+      case 'statistik':
+        return (
+          <StatistikView
+            geschaefte={geschaefte}
+            mitarbeiter={mitarbeiter}
+            monatsDaten={monatsDaten}
+            umsatzDaten={umsatzDaten}
+          />
+        )
       case 'einstellungen':
         return <EinstellungenView />
       default:
@@ -1186,7 +1629,9 @@ export default function App() {
   const headerTitel =
     activeView === 'personal-detail' && selectedMitarbeiter
       ? `${selectedMitarbeiter.firstName} ${selectedMitarbeiter.lastName}`
-      : VIEW_TITEL[activeView]
+      : activeView === 'geschaeft-detail' && selectedGeschaeft
+        ? selectedGeschaeft.name
+        : VIEW_TITEL[activeView]
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
