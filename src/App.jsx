@@ -19,6 +19,10 @@ import {
   ArrowLeft,
   Save,
   CalendarDays,
+  LogOut,
+  Lock,
+  User,
+  AlertCircle,
 } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
@@ -100,6 +104,108 @@ const NAV_LINKS = [
   { key: 'personal', label: 'Personal', icon: Users },
   { key: 'einstellungen', label: 'Einstellungen', icon: Settings },
 ]
+
+/* -------------------------------------------------------------------------- */
+/*  ANMELDEDATEN (Demo-Login)                                                 */
+/* -------------------------------------------------------------------------- */
+
+const ANMELDEDATEN = {
+  benutzername: 'Geschäft',
+  passwort: 'Geschäft123',
+}
+
+/* -------------------------------------------------------------------------- */
+/*  LOGIN-ANSICHT                                                             */
+/* -------------------------------------------------------------------------- */
+
+function LoginView({ onAnmelden }) {
+  const [benutzername, setBenutzername] = useState('')
+  const [passwort, setPasswort] = useState('')
+  const [fehler, setFehler] = useState('')
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    if (
+      benutzername === ANMELDEDATEN.benutzername &&
+      passwort === ANMELDEDATEN.passwort
+    ) {
+      setFehler('')
+      onAnmelden()
+    } else {
+      setFehler('Benutzername oder Passwort ist falsch.')
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+            <Building2 className="h-7 w-7" />
+          </div>
+          <h1 className="mt-4 text-xl font-bold text-slate-900">BEM Verwaltung</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Bitte melden Sie sich an, um fortzufahren
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Benutzername
+            </label>
+            <div className="relative">
+              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={benutzername}
+                onChange={(e) => setBenutzername(e.target.value)}
+                placeholder="Benutzername"
+                autoComplete="username"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Passwort
+            </label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="password"
+                value={passwort}
+                onChange={(e) => setPasswort(e.target.value)}
+                placeholder="Passwort"
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+          </div>
+
+          {fehler && (
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-600">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              {fehler}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+          >
+            Anmelden
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-xs text-slate-400">
+          Demo-Zugangsdaten – Benutzername: „Geschäft" · Passwort: „Geschäft123"
+        </p>
+      </div>
+    </div>
+  )
+}
 
 /* -------------------------------------------------------------------------- */
 /*  SIDEBAR                                                                   */
@@ -190,7 +296,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
 /*  HEADER                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function Header({ title, onMenuClick }) {
+function Header({ title, onMenuClick, onAbmelden }) {
   return (
     <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-slate-200 bg-white px-4 py-4 md:px-8">
       {/* Menü-Button (mobil) */}
@@ -233,6 +339,16 @@ function Header({ title, onMenuClick }) {
           <p className="text-xs text-slate-500">Administrator</p>
         </div>
       </div>
+
+      {/* Abmelden */}
+      <button
+        onClick={onAbmelden}
+        className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+        aria-label="Abmelden"
+        title="Abmelden"
+      >
+        <LogOut className="h-5 w-5" />
+      </button>
     </header>
   )
 }
@@ -849,6 +965,7 @@ const VIEW_TITEL = {
 }
 
 export default function App() {
+  const [istAngemeldet, setIstAngemeldet] = useState(false)
   const [activeView, setActiveView] = useState('dashboard')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mitarbeiter, setMitarbeiter] = useState(MITARBEITER)
@@ -856,6 +973,15 @@ export default function App() {
 
   // Monatsdaten je Mitarbeiter: { [mitarbeiterId]: [{ jahr, monat, gehalt, stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
+
+  const handleAbmelden = () => {
+    setIstAngemeldet(false)
+    setActiveView('dashboard')
+  }
+
+  if (!istAngemeldet) {
+    return <LoginView onAnmelden={() => setIstAngemeldet(true)} />
+  }
 
   // Mitarbeiter löschen (aus dem State entfernen)
   const handleDelete = (id) => {
@@ -948,7 +1074,11 @@ export default function App() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header title={headerTitel} onMenuClick={() => setMobileOpen(true)} />
+        <Header
+          title={headerTitel}
+          onMenuClick={() => setMobileOpen(true)}
+          onAbmelden={handleAbmelden}
+        />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">{renderView()}</main>
       </div>
