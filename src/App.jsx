@@ -388,7 +388,7 @@ function KpiCard({ icon: Icon, label, value, hint, accent }) {
 /*  DASHBOARD VIEW                                                            */
 /* -------------------------------------------------------------------------- */
 
-function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onNeuesGeschaeft }) {
+function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQuickAction }) {
   const currentYear = new Date().getFullYear()
 
   // KPIs computed dynamically from the data
@@ -524,11 +524,25 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onN
 
           <div className="mt-6 space-y-3">
             <button
-              onClick={onNeuesGeschaeft}
+              onClick={() => onQuickAction('store')}
               className="flex w-full items-center gap-3 rounded-2xl bg-lime-400 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
             >
               <PlusCircle className="h-5 w-5" />
               New Store
+            </button>
+            <button
+              onClick={() => onQuickAction('employee')}
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+            >
+              <UserPlus className="h-5 w-5 text-lime-400" />
+              New Employee
+            </button>
+            <button
+              onClick={() => onQuickAction('salary')}
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+            >
+              <Wallet className="h-5 w-5 text-lime-400" />
+              Update Salary
             </button>
           </div>
 
@@ -1447,6 +1461,31 @@ function EinstellungenView() {
 /*  monthly salary entry, all inside a glass modal overlay.                  */
 /* -------------------------------------------------------------------------- */
 
+function ModalOverlay({ onClose, maxWidthClass = 'max-w-2xl', children }) {
+  // Close on Escape
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className={`max-h-[85vh] w-full ${maxWidthClass} overflow-y-auto rounded-[2rem] border border-white/10 bg-[#1a1c23]/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function StoreEmployeesModal({
   store,
   mitarbeiter,
@@ -1467,15 +1506,6 @@ function StoreEmployeesModal({
 
   const storeEmployees = mitarbeiter.filter((m) => m.storeId === store.id)
   const selectedEmployee = storeEmployees.find((m) => m.id === selectedEmployeeId)
-
-  // Close on Escape
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [onClose])
 
   const resetForm = () => {
     setFormularOffen(false)
@@ -1501,15 +1531,8 @@ function StoreEmployeesModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[#1a1c23]/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        {selectedEmployee ? (
+    <ModalOverlay onClose={onClose}>
+      {selectedEmployee ? (
           <MitarbeiterDetailView
             mitarbeiter={selectedEmployee}
             geschaefte={[store]}
@@ -1693,8 +1716,285 @@ function StoreEmployeesModal({
             </div>
           </>
         )}
+    </ModalOverlay>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  QUICK ACTION MODALS (Dashboard)                                           */
+/* -------------------------------------------------------------------------- */
+
+function NewStoreModal({ onClose, onHinzufuegen }) {
+  const [name, setName] = useState('')
+  const [stadt, setStadt] = useState('')
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    if (!name.trim() || !stadt.trim()) return
+    onHinzufuegen(name.trim(), stadt.trim())
+    onClose()
+  }
+
+  return (
+    <ModalOverlay onClose={onClose} maxWidthClass="max-w-lg">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-lg font-bold text-white">New Store</h2>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="rounded-2xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:bg-white/10"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-200">Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Southside Branch"
+            required
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-200">City</label>
+          <input
+            type="text"
+            value={stadt}
+            onChange={(e) => setStadt(e.target.value)}
+            placeholder="e.g. Stuttgart"
+            required
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+          />
+        </div>
+        <div className="flex justify-end gap-3 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
+          >
+            Save Store
+          </button>
+        </div>
+      </form>
+    </ModalOverlay>
+  )
+}
+
+function NewEmployeeModal({ geschaefte, onClose, onHinzufuegen }) {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [position, setPosition] = useState('')
+  const [storeId, setStoreId] = useState(geschaefte[0]?.id ?? '')
+  const [salary, setSalary] = useState('')
+  const [hours, setHours] = useState('')
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    if (!firstName.trim() || !lastName.trim() || !position.trim() || !storeId) return
+    onHinzufuegen({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      position: position.trim(),
+      storeId: Number(storeId),
+      salary: Number(salary) || 0,
+      hours: Number(hours) || 0,
+    })
+    onClose()
+  }
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-lg font-bold text-white">New Employee</h2>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="rounded-2xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:bg-white/10"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
+              First Name
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="e.g. Julia"
+              required
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
+              Last Name
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="e.g. Bauer"
+              required
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
+              Position
+            </label>
+            <input
+              type="text"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              placeholder="e.g. Sales Associate"
+              required
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
+              Store
+            </label>
+            <select
+              value={storeId}
+              onChange={(e) => setStoreId(e.target.value)}
+              required
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+            >
+              {geschaefte.length === 0 && <option value="">No store available</option>}
+              {geschaefte.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} · {g.city}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
+              Salary (€)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="10"
+              value={salary}
+              onChange={(e) => setSalary(e.target.value)}
+              placeholder="e.g. 2800"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
+              Hours/Week
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+              placeholder="e.g. 38"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={geschaefte.length === 0}
+            className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Save Employee
+          </button>
+        </div>
+      </form>
+    </ModalOverlay>
+  )
+}
+
+function UpdateSalaryModal({ mitarbeiter, geschaefte, monatsDaten, onClose, onMonatSpeichern, onGehaltLoeschen }) {
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('')
+  const selectedEmployee = mitarbeiter.find((m) => m.id === Number(selectedEmployeeId))
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      {selectedEmployee ? (
+        <MitarbeiterDetailView
+          mitarbeiter={selectedEmployee}
+          geschaefte={geschaefte}
+          eintraege={monatsDaten[selectedEmployee.id] ?? []}
+          onSpeichern={onMonatSpeichern}
+          onGehaltLoeschen={onGehaltLoeschen}
+          onZurueck={() => setSelectedEmployeeId('')}
+          backLabel="Back to employee selection"
+        />
+      ) : (
+        <>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-white">Update Salary</h2>
+              <p className="text-sm text-slate-400">
+                Select an employee to record their monthly salary.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-2xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:bg-white/10"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {mitarbeiter.length === 0 ? (
+            <p className="mt-5 rounded-xl bg-white/5 px-4 py-8 text-center text-sm text-slate-500">
+              No employees yet.
+            </p>
+          ) : (
+            <div className="mt-5">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
+                Employee
+              </label>
+              <select
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+              >
+                <option value="">Select an employee…</option>
+                {mitarbeiter.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.firstName} {m.lastName} · {getStoreName(m.storeId, geschaefte)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </>
+      )}
+    </ModalOverlay>
   )
 }
 
@@ -1717,6 +2017,8 @@ export default function App() {
   const [geschaefte, setGeschaefte] = useState(STORES)
   const [selectedGeschaeftId, setSelectedGeschaeftId] = useState(null)
   const [selectedStoreId, setSelectedStoreId] = useState(null)
+  // Which Dashboard "Quick Actions" modal is open: 'store' | 'employee' | 'salary' | null
+  const [quickModal, setQuickModal] = useState(null)
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
@@ -1829,7 +2131,7 @@ export default function App() {
             mitarbeiter={mitarbeiter}
             monatsDaten={monatsDaten}
             onStoreClick={(id) => setSelectedStoreId(id)}
-            onNeuesGeschaeft={() => setActiveView('geschaefte')}
+            onQuickAction={(type) => setQuickModal(type)}
           />
         )
       case 'geschaefte':
@@ -1913,6 +2215,32 @@ export default function App() {
           onClose={() => setSelectedStoreId(null)}
           onHinzufuegen={handleMitarbeiterHinzufuegen}
           onDelete={handleDelete}
+          onMonatSpeichern={handleMonatSpeichern}
+          onGehaltLoeschen={handleGehaltLoeschen}
+        />
+      )}
+
+      {quickModal === 'store' && (
+        <NewStoreModal
+          onClose={() => setQuickModal(null)}
+          onHinzufuegen={handleGeschaeftHinzufuegen}
+        />
+      )}
+
+      {quickModal === 'employee' && (
+        <NewEmployeeModal
+          geschaefte={geschaefte}
+          onClose={() => setQuickModal(null)}
+          onHinzufuegen={handleMitarbeiterHinzufuegen}
+        />
+      )}
+
+      {quickModal === 'salary' && (
+        <UpdateSalaryModal
+          mitarbeiter={mitarbeiter}
+          geschaefte={geschaefte}
+          monatsDaten={monatsDaten}
+          onClose={() => setQuickModal(null)}
           onMonatSpeichern={handleMonatSpeichern}
           onGehaltLoeschen={handleGehaltLoeschen}
         />
