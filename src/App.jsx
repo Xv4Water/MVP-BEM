@@ -252,32 +252,25 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-white/10 bg-white/5 text-slate-300 backdrop-blur-2xl transition-transform duration-300 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-20 flex-shrink-0 flex-col items-center gap-3 py-6 transition-transform duration-300 md:static md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
+        <button
+          className="absolute right-2 top-2 text-slate-500 hover:text-white md:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
         {/* Logo */}
-        <div className="flex items-center justify-between px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-400 text-white shadow-lg shadow-lime-400/30">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-base font-bold text-white">BEM Management</p>
-              <p className="text-xs text-slate-500">Business Management</p>
-            </div>
-          </div>
-          <button
-            className="text-slate-500 hover:text-white md:hidden"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close menu"
-          >
-            <X className="h-6 w-6" />
-          </button>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-lime-400 text-white shadow-lg shadow-lime-400/30">
+          <Building2 className="h-5 w-5" />
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-4 py-4">
+        <nav className="flex flex-col items-center gap-2 rounded-full border border-white/10 bg-white/5 p-2 backdrop-blur-2xl">
           {NAV_LINKS.map(({ key, label, icon: Icon }) => {
             const isActive =
               activeView === key ||
@@ -287,30 +280,26 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
               <button
                 key={key}
                 onClick={() => handleClick(key)}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
+                title={label}
+                aria-label={label}
+                className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
                   isActive
                     ? 'bg-lime-400 text-white shadow-lg shadow-lime-400/30'
-                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                    : 'text-slate-400 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                {label}
               </button>
             )
           })}
         </nav>
 
-        {/* User card at the bottom */}
-        <div className="border-t border-white/10 p-4">
-          <div className="flex items-center gap-3 rounded-2xl bg-white/5 p-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-sm font-bold text-white">
-              MK
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">Michael Krause</p>
-              <p className="truncate text-xs text-slate-500">Management</p>
-            </div>
-          </div>
+        {/* User avatar at the bottom */}
+        <div
+          className="mt-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-xs font-bold text-white"
+          title="Michael Krause · Management"
+        >
+          MK
         </div>
       </aside>
     </>
@@ -323,7 +312,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
 
 function Header({ title, onMenuClick, onLogout }) {
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/10 bg-white/5 backdrop-blur-xl px-4 py-4 md:px-8">
+    <header className="flex shrink-0 items-center gap-4 border-b border-white/10 px-4 py-4 md:px-8">
       {/* Menu button (mobile) */}
       <button
         className="text-slate-300 hover:text-white md:hidden"
@@ -1921,21 +1910,23 @@ export default function App() {
         : VIEW_TITEL[activeView]
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-slate-950">
+    <div className="relative flex h-screen items-stretch gap-4 overflow-hidden bg-slate-950 p-4">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-lime-500/20 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-lime-400/10 blur-3xl" />
       </div>
 
-      <Sidebar
-        activeView={activeView}
-        setActiveView={setActiveView}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-      />
+      <div className="relative z-10">
+        <Sidebar
+          activeView={activeView}
+          setActiveView={setActiveView}
+          mobileOpen={mobileOpen}
+          setMobileOpen={setMobileOpen}
+        />
+      </div>
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-black/40 backdrop-blur-xl">
         <Header
           title={headerTitel}
           onMenuClick={() => setMobileOpen(true)}
