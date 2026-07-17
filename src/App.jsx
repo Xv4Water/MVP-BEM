@@ -357,7 +357,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-20 flex-shrink-0 flex-col items-center gap-3 py-6 transition-transform duration-300 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 m-4 flex h-[calc(100vh-2rem)] w-20 flex-shrink-0 flex-col items-center gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-3 backdrop-blur-2xl transition-transform duration-300 md:static md:h-[calc(100vh-2rem)] md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -375,7 +375,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col items-center gap-2 rounded-full border border-white/10 bg-white/5 p-2 backdrop-blur-2xl">
+        <nav className="flex flex-col items-center gap-2">
           {NAV_LINKS.map(({ key, label, icon: Icon }) => {
             const isActive =
               activeView === key ||
@@ -386,13 +386,13 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
                 onClick={() => handleClick(key)}
                 title={label}
                 aria-label={label}
-                className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+                className={
                   isActive
-                    ? 'bg-lime-400 text-white shadow-lg shadow-lime-400/30'
-                    : 'text-slate-400 hover:bg-white/10 hover:text-white'
-                }`}
+                    ? 'flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-400 shadow-[0_0_15px_rgba(163,230,53,0.4)]'
+                    : 'flex h-12 w-12 items-center justify-center rounded-2xl text-gray-400 transition-colors hover:bg-white/10'
+                }
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-slate-900' : ''}`} />
               </button>
             )
           })}
@@ -475,16 +475,21 @@ function Header({ title, onMenuClick, onLogout }) {
 /*  KPI CARD                                                                  */
 /* -------------------------------------------------------------------------- */
 
-function KpiCard({ icon: Icon, label, value, hint, accent }) {
+function KpiCard({ icon: Icon, label, value, hint, accent, variant = 'standard' }) {
+  const isPrimary = variant === 'primary'
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl">
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-xl backdrop-blur-2xl md:p-6">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-400">{label}</p>
-          <p className="mt-2 text-3xl font-bold text-white">{value}</p>
-          {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+          <p className="mb-3 text-sm font-medium text-gray-400">{label}</p>
+          <p className={`text-3xl font-semibold tracking-tight lg:text-4xl ${isPrimary ? 'text-lime-400' : 'text-white'}`}>
+            {value}
+          </p>
+          {hint && (
+            <p className={`mt-1 text-xs ${isPrimary ? 'text-slate-500' : 'text-lime-400'}`}>{hint}</p>
+          )}
         </div>
-        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accent}`}>
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${accent}`}>
           <Icon className="h-6 w-6" />
         </div>
       </div>
@@ -565,6 +570,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
           value={formatEuro(kpis.personalkosten)}
           hint="Gross salaries for the current year"
           accent="bg-amber-500/10 text-amber-400"
+          variant="primary"
         />
         <KpiCard
           icon={Crown}
@@ -580,6 +586,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
               : 'No employees yet'
           }
           accent="bg-rose-500/10 text-rose-400"
+          variant="primary"
         />
       </div>
 
@@ -2398,7 +2405,7 @@ export default function App() {
       : VIEW_TITEL[activeView]
 
   return (
-    <div className="relative isolate flex h-screen items-stretch gap-4 overflow-hidden bg-slate-950 p-4">
+    <div className="relative isolate flex h-screen items-stretch overflow-hidden bg-slate-950">
       <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
         <div className="h-full w-full scale-110">
           <GermanyMap selectedState={mapSelectedState} glow />
@@ -2416,7 +2423,7 @@ export default function App() {
         />
       </div>
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/40">
+      <div className="relative z-10 m-4 flex min-w-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/40 md:ml-0">
         <Header
           title={headerTitel}
           onMenuClick={() => setMobileOpen(true)}
