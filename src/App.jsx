@@ -155,55 +155,61 @@ function LoginView({ onLogin }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-lime-500/20 blur-3xl" />
+        <div className="absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-lime-400/10 blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400 text-white shadow-lg shadow-lime-400/30">
             <Building2 className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 text-xl font-bold text-slate-900">BEM Management</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="mt-4 text-xl font-bold text-white">BEM Management</h1>
+          <p className="mt-1 text-sm text-slate-400">
             Please sign in to continue
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Username
             </label>
             <div className="relative">
-              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
                 autoComplete="username"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Password
             </label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 autoComplete="current-password"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-600">
+            <div className="flex items-center gap-2 rounded-2xl bg-rose-500/10 px-4 py-2.5 text-sm text-rose-400">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               {error}
             </div>
@@ -211,13 +217,13 @@ function LoginView({ onLogin }) {
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+            className="w-full rounded-2xl bg-lime-400 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
           >
             Sign In
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <p className="mt-6 text-center text-xs text-slate-500">
           Demo credentials – Username: "Business" · Password: "Business123"
         </p>
       </div>
@@ -246,23 +252,23 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-slate-900 text-slate-300 transition-transform duration-300 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-white/10 bg-white/5 text-slate-300 backdrop-blur-2xl transition-transform duration-300 md:static md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-400 text-white shadow-lg shadow-lime-400/30">
               <Building2 className="h-6 w-6" />
             </div>
             <div>
               <p className="text-base font-bold text-white">BEM Management</p>
-              <p className="text-xs text-slate-400">Business Management</p>
+              <p className="text-xs text-slate-500">Business Management</p>
             </div>
           </div>
           <button
-            className="text-slate-400 hover:text-white md:hidden"
+            className="text-slate-500 hover:text-white md:hidden"
             onClick={() => setMobileOpen(false)}
             aria-label="Close menu"
           >
@@ -281,10 +287,10 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
               <button
                 key={key}
                 onClick={() => handleClick(key)}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-lime-400 text-white shadow-lg shadow-lime-400/30'
+                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -295,14 +301,14 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
         </nav>
 
         {/* User card at the bottom */}
-        <div className="border-t border-slate-800 p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 p-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-sm font-bold text-white">
+        <div className="border-t border-white/10 p-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-white/5 p-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-sm font-bold text-white">
               MK
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">Michael Krause</p>
-              <p className="truncate text-xs text-slate-400">Management</p>
+              <p className="truncate text-xs text-slate-500">Management</p>
             </div>
           </div>
         </div>
@@ -317,10 +323,10 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
 
 function Header({ title, onMenuClick, onLogout }) {
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-slate-200 bg-white px-4 py-4 md:px-8">
+    <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/10 bg-white/5 backdrop-blur-xl px-4 py-4 md:px-8">
       {/* Menu button (mobile) */}
       <button
-        className="text-slate-600 hover:text-slate-900 md:hidden"
+        className="text-slate-300 hover:text-white md:hidden"
         onClick={onMenuClick}
         aria-label="Open menu"
       >
@@ -328,41 +334,41 @@ function Header({ title, onMenuClick, onLogout }) {
       </button>
 
       <div className="hidden md:block">
-        <h1 className="text-lg font-bold text-slate-900">{title}</h1>
-        <p className="text-xs text-slate-500">{todaysDate()}</p>
+        <h1 className="text-lg font-bold text-white">{title}</h1>
+        <p className="text-xs text-slate-400">{todaysDate()}</p>
       </div>
 
       {/* Search bar */}
       <div className="relative ml-auto w-full max-w-xs">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
         <input
           type="text"
           placeholder="Search …"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+          className="w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
         />
       </div>
 
       {/* Notifications */}
-      <button className="relative rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:bg-slate-50">
+      <button className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-2.5 text-slate-300 transition hover:bg-white/10">
         <Bell className="h-5 w-5" />
         <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
       </button>
 
       {/* Profile placeholder */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-sm font-bold text-white">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-sm font-bold text-white">
           MK
         </div>
         <div className="hidden text-sm lg:block">
-          <p className="font-semibold text-slate-900">Michael Krause</p>
-          <p className="text-xs text-slate-500">Administrator</p>
+          <p className="font-semibold text-white">Michael Krause</p>
+          <p className="text-xs text-slate-400">Administrator</p>
         </div>
       </div>
 
       {/* Sign out */}
       <button
         onClick={onLogout}
-        className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+        className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-2.5 text-slate-300 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
         aria-label="Sign out"
         title="Sign out"
       >
@@ -378,14 +384,14 @@ function Header({ title, onMenuClick, onLogout }) {
 
 function KpiCard({ icon: Icon, label, value, hint, accent }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+    <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900">{value}</p>
-          {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+          <p className="text-sm font-medium text-slate-400">{label}</p>
+          <p className="mt-2 text-3xl font-bold text-white">{value}</p>
+          {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
         </div>
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${accent}`}>
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accent}`}>
           <Icon className="h-6 w-6" />
         </div>
       </div>
@@ -450,21 +456,21 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
           label="Active Stores"
           value={kpis.aktiveGeschaefte}
           hint="Stores nationwide"
-          accent="bg-indigo-50 text-indigo-600"
+          accent="bg-lime-400/10 text-lime-400"
         />
         <KpiCard
           icon={Users}
           label="Total Employees"
           value={kpis.gesamtMitarbeiter}
           hint="Active staff"
-          accent="bg-emerald-50 text-emerald-600"
+          accent="bg-emerald-500/10 text-emerald-400"
         />
         <KpiCard
           icon={Wallet}
           label={`Staff Costs ${currentYear}`}
           value={formatEuro(kpis.personalkosten)}
           hint="Gross salaries for the current year"
-          accent="bg-amber-50 text-amber-600"
+          accent="bg-amber-500/10 text-amber-400"
         />
         <KpiCard
           icon={Crown}
@@ -479,38 +485,38 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
               ? `${formatEuro(kpis.teuersterMitarbeiter.salary)} · ${kpis.teuersterMitarbeiter.position}`
               : 'No employees yet'
           }
-          accent="bg-rose-50 text-rose-600"
+          accent="bg-rose-500/10 text-rose-400"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Chart: employees per store */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20 lg:col-span-2">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-white">
                 Employees per Store
               </h2>
-              <p className="text-sm text-slate-500">Distribution by branch</p>
+              <p className="text-sm text-slate-400">Distribution by branch</p>
             </div>
           </div>
 
           <div className="space-y-5">
             {mitarbeiterProGeschaeft.daten.length === 0 && (
-              <p className="text-sm text-slate-400">No stores created yet.</p>
+              <p className="text-sm text-slate-500">No stores created yet.</p>
             )}
             {mitarbeiterProGeschaeft.daten.map((d) => (
               <div key={d.name}>
                 <div className="mb-1.5 flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-700">
+                  <span className="font-medium text-slate-200">
                     {d.name}{' '}
-                    <span className="text-slate-400">· {d.city}</span>
+                    <span className="text-slate-500">· {d.city}</span>
                   </span>
-                  <span className="font-semibold text-slate-900">{d.anzahl}</span>
+                  <span className="font-semibold text-white">{d.anzahl}</span>
                 </div>
-                <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 transition-all duration-500"
                     style={{
                       width: `${(d.anzahl / mitarbeiterProGeschaeft.max) * 100}%`,
                     }}
@@ -522,30 +528,30 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
         </div>
 
         {/* Quick actions */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-bold text-slate-900">Quick Actions</h2>
-          <p className="text-sm text-slate-500">Frequently used functions</p>
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+          <h2 className="text-base font-bold text-white">Quick Actions</h2>
+          <p className="text-sm text-slate-400">Frequently used functions</p>
 
           <div className="mt-6 space-y-3">
             <button
               onClick={onNeuerMitarbeiter}
-              className="flex w-full items-center gap-3 rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+              className="flex w-full items-center gap-3 rounded-2xl bg-lime-400 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
             >
               <UserPlus className="h-5 w-5" />
               New Employee
             </button>
             <button
               onClick={onNeuesGeschaeft}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
-              <PlusCircle className="h-5 w-5 text-indigo-600" />
+              <PlusCircle className="h-5 w-5 text-lime-400" />
               New Store
             </button>
           </div>
 
-          <div className="mt-6 rounded-xl bg-slate-50 p-4">
-            <p className="text-sm font-medium text-slate-700">Tip</p>
-            <p className="mt-1 text-xs text-slate-500">
+          <div className="mt-6 rounded-2xl bg-white/5 p-4">
+            <p className="text-sm font-medium text-slate-200">Tip</p>
+            <p className="mt-1 text-xs text-slate-400">
               You can edit and update employee data anytime in Employee
               Management.
             </p>
@@ -597,14 +603,14 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Employee Management</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-lg font-bold text-white">Employee Management</h2>
+          <p className="text-sm text-slate-400">
             {mitarbeiter.length} employees in total
           </p>
         </div>
         <button
           onClick={() => setFormularOffen((offen) => !offen)}
-          className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
         >
           <UserPlus className="h-4 w-4" />
           New Employee
@@ -615,12 +621,12 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
       {formularOffen && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20"
         >
-          <h3 className="text-base font-bold text-slate-900">Add New Employee</h3>
+          <h3 className="text-base font-bold text-white">Add New Employee</h3>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 First Name
               </label>
               <input
@@ -629,11 +635,11 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="e.g. Julia"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Last Name
               </label>
               <input
@@ -642,11 +648,11 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="e.g. Bauer"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Position
               </label>
               <input
@@ -655,18 +661,18 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 onChange={(e) => setPosition(e.target.value)}
                 placeholder="e.g. Sales Associate"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Store
               </label>
               <select
                 value={storeId}
                 onChange={(e) => setStoreId(e.target.value)}
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               >
                 {geschaefte.length === 0 && <option value="">No store available</option>}
                 {geschaefte.map((g) => (
@@ -677,7 +683,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Salary (€)
               </label>
               <input
@@ -687,11 +693,11 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
                 placeholder="e.g. 2800"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Hours/Week
               </label>
               <input
@@ -701,7 +707,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
                 placeholder="e.g. 38"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
           </div>
@@ -709,14 +715,14 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
             <button
               type="button"
               onClick={handleAbbrechen}
-              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={geschaefte.length === 0}
-              className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Save Employee
             </button>
@@ -725,11 +731,11 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/20">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-6 py-4 font-semibold">Name</th>
                 <th className="px-6 py-4 font-semibold">Position</th>
                 <th className="px-6 py-4 font-semibold">Store</th>
@@ -738,46 +744,46 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 <th className="px-6 py-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {mitarbeiter.map((m) => (
-                <tr key={m.id} className="transition-colors hover:bg-slate-50">
+                <tr key={m.id} className="transition-colors hover:bg-white/10">
                   <td className="px-6 py-4">
                     <button
                       onClick={() => onView(m.id)}
                       className="flex items-center gap-3 text-left"
                       title="View details"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-xs font-bold text-white">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-xs font-bold text-white">
                         {m.firstName[0]}
                         {m.lastName[0]}
                       </div>
-                      <span className="font-medium text-slate-900 hover:text-indigo-600 hover:underline">
+                      <span className="font-medium text-white hover:text-lime-400 hover:underline">
                         {m.firstName} {m.lastName}
                       </span>
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-slate-600">{m.position}</td>
+                  <td className="px-6 py-4 text-slate-300">{m.position}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                    <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-200">
                       {getStoreName(m.storeId, geschaefte)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-medium text-slate-900">
+                  <td className="px-6 py-4 font-medium text-white">
                     {formatEuro(m.salary)}
                   </td>
-                  <td className="px-6 py-4 text-slate-600">{m.hours} hrs</td>
+                  <td className="px-6 py-4 text-slate-300">{m.hours} hrs</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onView(m.id)}
-                        className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                        className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
                         aria-label={`Enter monthly data for ${m.firstName} ${m.lastName}`}
                         title="Enter monthly data"
                       >
                         <CalendarDays className="h-4 w-4" />
                       </button>
                       <button
-                        className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                        className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
                         aria-label={`Edit ${m.firstName} ${m.lastName}`}
                         title="Edit"
                       >
@@ -785,7 +791,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                       </button>
                       <button
                         onClick={() => onDelete(m.id)}
-                        className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                        className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
                         aria-label={`Delete ${m.firstName} ${m.lastName}`}
                         title="Delete"
                       >
@@ -800,7 +806,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-6 py-12 text-center text-sm text-slate-400"
+                    className="px-6 py-12 text-center text-sm text-slate-500"
                   >
                     No employees yet.
                   </td>
@@ -846,15 +852,15 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
   )
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h3 className="text-base font-bold text-slate-900">Salary History {jahr}</h3>
-      <p className="text-sm text-slate-500">
+    <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+      <h3 className="text-base font-bold text-white">Salary History {jahr}</h3>
+      <p className="text-sm text-slate-400">
         Monthly salary for {mitarbeiter.firstName} {mitarbeiter.lastName}
       </p>
 
       <div className="mt-6 flex gap-3">
         {/* Y axis */}
-        <div className="flex h-56 flex-col justify-between text-right text-xs tabular-nums text-slate-400">
+        <div className="flex h-56 flex-col justify-between text-right text-xs tabular-nums text-slate-500">
           {GEHALT_Y_SCHRITTE.map((wert) => (
             <span key={wert}>€{wert.toLocaleString('en-GB')}</span>
           ))}
@@ -867,7 +873,7 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
             {GEHALT_Y_SCHRITTE.map((wert) => (
               <div
                 key={wert}
-                className="absolute inset-x-0 border-t border-slate-100"
+                className="absolute inset-x-0 border-t border-white/5"
                 style={{ top: `${100 - (wert / GEHALT_Y_MAX) * 100}%` }}
               />
             ))}
@@ -884,13 +890,13 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
                     onMouseLeave={() => setHoverIndex(null)}
                   >
                     {hoverIndex === index && (
-                      <div className="pointer-events-none absolute -top-8 z-10 whitespace-nowrap rounded-lg bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-lg">
+                      <div className="pointer-events-none absolute -top-8 z-10 whitespace-nowrap rounded-xl bg-lime-400 px-2 py-1 text-xs font-bold text-white shadow-lg shadow-black/40">
                         {formatEuro(wert)}
                       </div>
                     )}
                     <div
                       className={`w-full max-w-[28px] rounded-t-[4px] transition-colors ${
-                        hoverIndex === index ? 'bg-indigo-600' : 'bg-indigo-500'
+                        hoverIndex === index ? 'bg-lime-400' : 'bg-lime-500'
                       }`}
                       style={{ height: `${hoehe}%` }}
                     />
@@ -901,7 +907,7 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
           </div>
 
           {/* X axis */}
-          <div className="mt-2 flex justify-between gap-1.5 text-xs text-slate-400 sm:gap-2.5">
+          <div className="mt-2 flex justify-between gap-1.5 text-xs text-slate-500 sm:gap-2.5">
             {MONTHS_SHORT.map((name) => (
               <span key={name} className="flex-1 text-center">
                 {name}
@@ -992,33 +998,33 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
       <div>
         <button
           onClick={onZurueck}
-          className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
+          className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-lime-400"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Employee Management
         </button>
 
-        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-lg font-bold text-white">
+        <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-lg font-bold text-white">
             {mitarbeiter.firstName[0]}
             {mitarbeiter.lastName[0]}
           </div>
           <div className="mr-auto">
-            <h2 className="text-lg font-bold text-slate-900">
+            <h2 className="text-lg font-bold text-white">
               {mitarbeiter.firstName} {mitarbeiter.lastName}
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-400">
               {mitarbeiter.position} · {getStoreName(mitarbeiter.storeId, geschaefte)}
             </p>
           </div>
           <div className="flex gap-6 text-sm">
             <div>
-              <p className="text-slate-400">Base Salary</p>
-              <p className="font-semibold text-slate-900">{formatEuro(mitarbeiter.salary)}</p>
+              <p className="text-slate-500">Base Salary</p>
+              <p className="font-semibold text-white">{formatEuro(mitarbeiter.salary)}</p>
             </div>
             <div>
-              <p className="text-slate-400">Base Hours</p>
-              <p className="font-semibold text-slate-900">{mitarbeiter.hours} hrs/week</p>
+              <p className="text-slate-500">Base Hours</p>
+              <p className="font-semibold text-white">{mitarbeiter.hours} hrs/week</p>
             </div>
           </div>
         </div>
@@ -1026,22 +1032,22 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Form: enter monthly data */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Enter Monthly Data</h3>
-          <p className="text-sm text-slate-500">
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+          <h3 className="text-base font-bold text-white">Enter Monthly Data</h3>
+          <p className="text-sm text-slate-400">
             Select a calendar month and year to enter salary and hours worked.
           </p>
 
           <form onSubmit={handleSpeichern} className="mt-5 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Month
                 </label>
                 <select
                   value={monat}
                   onChange={(e) => setMonat(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
                 >
                   {MONTHS.map((name, index) => (
                     <option key={name} value={index}>
@@ -1051,13 +1057,13 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Year
                 </label>
                 <select
                   value={jahr}
                   onChange={(e) => setJahr(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
                 >
                   {jahresOptionen.map((j) => (
                     <option key={j} value={j}>
@@ -1069,7 +1075,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Salary (€) – up to {GEHALT_SLOTS} payments per month
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -1083,14 +1089,14 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
                     placeholder={`Salary ${index + 1}`}
                     value={wert}
                     onChange={(e) => handleGehaltInputChange(index, e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
                   />
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Hours Worked
               </label>
               <input
@@ -1100,20 +1106,20 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
                 required
                 value={stundenInput}
                 onChange={(e) => setStundenInput(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
 
             <div className="flex items-center gap-3 pt-1">
               <button
                 type="submit"
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+                className="flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
               >
                 <Save className="h-4 w-4" />
                 Save Entry
               </button>
               {gespeichertHinweis && (
-                <span className="text-sm font-medium text-emerald-600">
+                <span className="text-sm font-medium text-emerald-400">
                   ✓ Saved for {MONTHS[monat]} {jahr}
                 </span>
               )}
@@ -1122,15 +1128,15 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
         </div>
 
         {/* Recorded monthly data: salaries for the selected month/year */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Recorded Monthly Data</h3>
-          <p className="text-sm text-slate-500">
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+          <h3 className="text-base font-bold text-white">Recorded Monthly Data</h3>
+          <p className="text-sm text-slate-400">
             Salaries for {MONTHS[monat]} {jahr}
           </p>
 
           <div className="mt-5 space-y-3">
             {(!aktuellerEintrag || aktuellerEintrag.gehaelter.length === 0) && (
-              <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
+              <p className="rounded-2xl bg-white/5 px-4 py-6 text-center text-sm text-slate-500">
                 No salary data recorded yet for {MONTHS[monat]} {jahr}.
               </p>
             )}
@@ -1138,14 +1144,14 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
             {aktuellerEintrag?.gehaelter.map((betrag, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+                className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 px-4 py-3"
               >
-                <p className="text-sm font-medium text-slate-700">Salary {index + 1}</p>
+                <p className="text-sm font-medium text-slate-200">Salary {index + 1}</p>
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-semibold text-slate-900">{formatEuro(betrag)}</p>
+                  <p className="text-sm font-semibold text-white">{formatEuro(betrag)}</p>
                   <button
                     onClick={() => onGehaltLoeschen(mitarbeiter.id, jahr, monat, index)}
-                    className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                    className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
                     aria-label={`Delete Salary ${index + 1} for ${MONTHS[monat]} ${jahr}`}
                     title="Delete payment"
                   >
@@ -1156,9 +1162,9 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
             ))}
 
             {aktuellerEintrag && aktuellerEintrag.gehaelter.length > 0 && (
-              <div className="flex items-center justify-between border-t border-slate-200 px-4 pt-4">
-                <p className="text-sm font-bold text-slate-900">Total</p>
-                <p className="text-sm font-bold text-slate-900">{formatEuro(gehaltGesamt)}</p>
+              <div className="flex items-center justify-between border-t border-white/10 px-4 pt-4">
+                <p className="text-sm font-bold text-white">Total</p>
+                <p className="text-sm font-bold text-white">{formatEuro(gehaltGesamt)}</p>
               </div>
             )}
           </div>
@@ -1197,12 +1203,12 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Stores</h2>
-          <p className="text-sm text-slate-500">{geschaefte.length} active stores</p>
+          <h2 className="text-lg font-bold text-white">Stores</h2>
+          <p className="text-sm text-slate-400">{geschaefte.length} active stores</p>
         </div>
         <button
           onClick={() => setFormularOffen((offen) => !offen)}
-          className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
         >
           <PlusCircle className="h-4 w-4" />
           New Store
@@ -1213,12 +1219,12 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
       {formularOffen && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20"
         >
-          <h3 className="text-base font-bold text-slate-900">Add New Store</h3>
+          <h3 className="text-base font-bold text-white">Add New Store</h3>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Name
               </label>
               <input
@@ -1227,11 +1233,11 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Southside Branch"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 City
               </label>
               <input
@@ -1240,7 +1246,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                 onChange={(e) => setStadt(e.target.value)}
                 placeholder="e.g. Stuttgart"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
           </div>
@@ -1248,13 +1254,13 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
             <button
               type="button"
               onClick={handleAbbrechen}
-              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+              className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
             >
               Save Store
             </button>
@@ -1268,22 +1274,22 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
           return (
             <div
               key={g.id}
-              className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+              className="group rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-400/10 text-lime-400">
                     <Store className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900">{g.name}</p>
-                    <p className="text-sm text-slate-500">{g.city}</p>
+                    <p className="font-bold text-white">{g.name}</p>
+                    <p className="text-sm text-slate-400">{g.city}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onAnsehen(g.id)}
-                    className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
                     aria-label={`Enter revenue for ${g.name}`}
                     title="Enter revenue"
                   >
@@ -1292,7 +1298,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                   <button
                     onClick={() => onLoeschen(g.id)}
                     disabled={anzahl > 0}
-                    className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-transparent disabled:hover:text-slate-400"
                     aria-label={`Delete ${g.name}`}
                     title={
                       anzahl > 0
@@ -1304,16 +1310,16 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                   </button>
                 </div>
               </div>
-              <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                <span className="text-sm text-slate-500">Employees</span>
-                <span className="text-sm font-semibold text-slate-900">{anzahl}</span>
+              <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-4">
+                <span className="text-sm text-slate-400">Employees</span>
+                <span className="text-sm font-semibold text-white">{anzahl}</span>
               </div>
             </div>
           )
         })}
 
         {geschaefte.length === 0 && (
-          <p className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-400">
+          <p className="col-span-full rounded-3xl border border-dashed border-white/10 bg-white/5 backdrop-blur-xl px-6 py-12 text-center text-sm text-slate-500">
             No stores yet. Use "New Store" to create your first one.
           </p>
         )}
@@ -1377,45 +1383,45 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
       <div>
         <button
           onClick={onZurueck}
-          className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
+          className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-lime-400"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Stores
         </button>
 
-        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+        <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400/10 text-lime-400">
             <Store className="h-7 w-7" />
           </div>
           <div className="mr-auto">
-            <h2 className="text-lg font-bold text-slate-900">{geschaeft.name}</h2>
-            <p className="text-sm text-slate-500">{geschaeft.city}</p>
+            <h2 className="text-lg font-bold text-white">{geschaeft.name}</h2>
+            <p className="text-sm text-slate-400">{geschaeft.city}</p>
           </div>
           <div className="text-sm">
-            <p className="text-slate-400">Employees</p>
-            <p className="font-semibold text-slate-900">{mitarbeiterAnzahl}</p>
+            <p className="text-slate-500">Employees</p>
+            <p className="font-semibold text-white">{mitarbeiterAnzahl}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Form: enter revenue */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Enter Revenue</h3>
-          <p className="text-sm text-slate-500">
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+          <h3 className="text-base font-bold text-white">Enter Revenue</h3>
+          <p className="text-sm text-slate-400">
             Select a calendar month and year to enter revenue.
           </p>
 
           <form onSubmit={handleSpeichern} className="mt-5 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Month
                 </label>
                 <select
                   value={monat}
                   onChange={(e) => setMonat(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
                 >
                   {MONTHS.map((name, index) => (
                     <option key={name} value={index}>
@@ -1425,13 +1431,13 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Year
                 </label>
                 <select
                   value={jahr}
                   onChange={(e) => setJahr(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
                 >
                   {jahresOptionen.map((j) => (
                     <option key={j} value={j}>
@@ -1443,7 +1449,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Revenue (€)
               </label>
               <input
@@ -1454,20 +1460,20 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
                 value={umsatzInput}
                 onChange={(e) => setUmsatzInput(e.target.value)}
                 placeholder="e.g. 24000"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
 
             <div className="flex items-center gap-3 pt-1">
               <button
                 type="submit"
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+                className="flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
               >
                 <Save className="h-4 w-4" />
                 Save Entry
               </button>
               {gespeichertHinweis && (
-                <span className="text-sm font-medium text-emerald-600">
+                <span className="text-sm font-medium text-emerald-400">
                   ✓ Saved for {MONTHS[monat]} {jahr}
                 </span>
               )}
@@ -1476,13 +1482,13 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
         </div>
 
         {/* Recorded revenue history */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Recorded Revenue</h3>
-          <p className="text-sm text-slate-500">History for {geschaeft.name}</p>
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+          <h3 className="text-base font-bold text-white">Recorded Revenue</h3>
+          <p className="text-sm text-slate-400">History for {geschaeft.name}</p>
 
           <div className="mt-5 space-y-3">
             {verlaufSortiert.length === 0 && (
-              <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
+              <p className="rounded-2xl bg-white/5 px-4 py-6 text-center text-sm text-slate-500">
                 No revenue recorded yet.
               </p>
             )}
@@ -1490,17 +1496,17 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
             {verlaufSortiert.map((e) => (
               <div
                 key={`${e.jahr}-${e.monat}`}
-                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+                className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 px-4 py-3"
               >
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-white">
                     {MONTHS[e.monat]} {e.jahr}
                   </p>
-                  <p className="text-xs text-slate-500">{formatEuro(e.umsatz)}</p>
+                  <p className="text-xs text-slate-400">{formatEuro(e.umsatz)}</p>
                 </div>
                 <button
                   onClick={() => onLoeschen(geschaeft.id, e.jahr, e.monat)}
-                  className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
                   aria-label={`Delete entry for ${MONTHS[e.monat]} ${e.jahr}`}
                   title="Delete entry"
                 >
@@ -1557,8 +1563,8 @@ function StatistikView({ geschaefte, umsatzDaten }) {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Statistics</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-lg font-bold text-white">Statistics</h2>
+          <p className="text-sm text-slate-400">
             Monthly revenue overview
           </p>
         </div>
@@ -1566,7 +1572,7 @@ function StatistikView({ geschaefte, umsatzDaten }) {
           <select
             value={jahr}
             onChange={(e) => setJahr(Number(e.target.value))}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-2.5 text-sm font-medium text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:ring-2 focus:ring-lime-400/20"
           >
             {jahresOptionen.map((j) => (
               <option key={j} value={j}>
@@ -1584,39 +1590,39 @@ function StatistikView({ geschaefte, umsatzDaten }) {
           label={`Revenue ${jahr}`}
           value={formatEuro(jahresSumme)}
           hint="Sum across all stores"
-          accent="bg-indigo-50 text-indigo-600"
+          accent="bg-lime-400/10 text-lime-400"
         />
         <KpiCard
           icon={BarChart3}
           label="Average per Month"
           value={formatEuro(durchschnittProMonat)}
           hint={`Average monthly revenue in ${jahr}`}
-          accent="bg-emerald-50 text-emerald-600"
+          accent="bg-emerald-500/10 text-emerald-400"
         />
       </div>
 
       {/* Monthly overview */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/20">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-6 py-4 font-semibold">Month</th>
                 <th className="px-6 py-4 font-semibold">Revenue</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {monatsStatistik.map((m) => (
-                <tr key={m.monat} className="transition-colors hover:bg-slate-50">
-                  <td className="px-6 py-4 font-medium text-slate-900">{m.name}</td>
+                <tr key={m.monat} className="transition-colors hover:bg-white/10">
+                  <td className="px-6 py-4 font-medium text-white">{m.name}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <span className="w-24 shrink-0 tabular-nums text-slate-700">
+                      <span className="w-24 shrink-0 tabular-nums text-slate-200">
                         {formatEuro(m.umsatz)}
                       </span>
-                      <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-2 w-24 overflow-hidden rounded-full bg-white/10">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                          className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500"
                           style={{ width: `${(m.umsatz / maxUmsatz) * 100}%` }}
                         />
                       </div>
@@ -1640,48 +1646,48 @@ function EinstellungenView() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-slate-900">Settings</h2>
-        <p className="text-sm text-slate-500">Manage your account and system settings</p>
+        <h2 className="text-lg font-bold text-white">Settings</h2>
+        <p className="text-sm text-slate-400">Manage your account and system settings</p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-bold text-slate-900">Company Profile</h3>
+      <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <h3 className="text-base font-bold text-white">Company Profile</h3>
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Company Name
             </label>
             <input
               type="text"
               defaultValue="BEM Management GmbH"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Email Address
             </label>
             <input
               type="email"
               defaultValue="info@bem-gmbh.de"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Store (Headquarters)
             </label>
             <input
               type="text"
               defaultValue="Berlin"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Currency
             </label>
-            <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100">
+            <select className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20">
               <option>Euro (€)</option>
               <option>US Dollar ($)</option>
               <option>Swiss Franc (CHF)</option>
@@ -1689,10 +1695,10 @@ function EinstellungenView() {
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
-          <button className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+          <button className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10">
             Cancel
           </button>
-          <button className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700">
+          <button className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300">
             Save Changes
           </button>
         </div>
@@ -1915,7 +1921,13 @@ export default function App() {
         : VIEW_TITEL[activeView]
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
+    <div className="relative flex h-screen overflow-hidden bg-slate-950">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-lime-500/20 blur-3xl" />
+        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-lime-400/10 blur-3xl" />
+      </div>
+
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
@@ -1923,7 +1935,7 @@ export default function App() {
         setMobileOpen={setMobileOpen}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
         <Header
           title={headerTitel}
           onMenuClick={() => setMobileOpen(true)}
