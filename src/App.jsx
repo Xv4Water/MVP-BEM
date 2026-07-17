@@ -10,7 +10,7 @@ import {
   X,
   Building2,
   Wallet,
-  Clock,
+  Crown,
   UserPlus,
   PlusCircle,
   Edit,
@@ -27,88 +27,88 @@ import {
 } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
-/*  MOCK-DATENBANK                                                            */
-/*  Realistische Beispieldaten für Geschäfte und Mitarbeiter (alles Deutsch) */
+/*  MOCK DATABASE                                                             */
+/*  Realistic sample data for stores and employees                           */
 /* -------------------------------------------------------------------------- */
 
-const GESCHAEFTE = [
-  { id: 1, name: 'Filiale Mitte', city: 'Berlin' },
-  { id: 2, name: 'Filiale Altstadt', city: 'München' },
-  { id: 3, name: 'Filiale Hafencity', city: 'Hamburg' },
-  { id: 4, name: 'Filiale Innenstadt', city: 'Köln' },
+const STORES = [
+  { id: 1, name: 'Central Branch', city: 'Berlin' },
+  { id: 2, name: 'Old Town Branch', city: 'Munich' },
+  { id: 3, name: 'Harbour City Branch', city: 'Hamburg' },
+  { id: 4, name: 'Downtown Branch', city: 'Cologne' },
 ]
 
-const MITARBEITER = [
-  { id: 1, firstName: 'Anna', lastName: 'Schmidt', storeId: 1, position: 'Filialleiterin', salary: 4200, hours: 40 },
-  { id: 2, firstName: 'Lukas', lastName: 'Müller', storeId: 1, position: 'Verkäufer', salary: 2800, hours: 38 },
-  { id: 3, firstName: 'Sophie', lastName: 'Weber', storeId: 2, position: 'Filialleiterin', salary: 4100, hours: 40 },
-  { id: 4, firstName: 'Jonas', lastName: 'Fischer', storeId: 2, position: 'Lagerist', salary: 2600, hours: 35 },
-  { id: 5, firstName: 'Marie', lastName: 'Wagner', storeId: 2, position: 'Verkäuferin', salary: 2750, hours: 30 },
-  { id: 6, firstName: 'Felix', lastName: 'Becker', storeId: 3, position: 'Filialleiter', salary: 4300, hours: 40 },
-  { id: 7, firstName: 'Laura', lastName: 'Hoffmann', storeId: 3, position: 'Verkäuferin', salary: 2900, hours: 40 },
-  { id: 8, firstName: 'Paul', lastName: 'Schäfer', storeId: 3, position: 'Aushilfe', salary: 1400, hours: 20 },
-  { id: 9, firstName: 'Emma', lastName: 'Koch', storeId: 4, position: 'Filialleiterin', salary: 4000, hours: 40 },
-  { id: 10, firstName: 'Tim', lastName: 'Richter', storeId: 4, position: 'Verkäufer', salary: 2850, hours: 38 },
-  { id: 11, firstName: 'Lena', lastName: 'Klein', storeId: 4, position: 'Aushilfe', salary: 1300, hours: 18 },
-  { id: 12, firstName: 'Max', lastName: 'Wolf', storeId: 1, position: 'Lagerist', salary: 2650, hours: 37 },
+const EMPLOYEES = [
+  { id: 1, firstName: 'Anna', lastName: 'Schmidt', storeId: 1, position: 'Store Manager', salary: 4200, hours: 40 },
+  { id: 2, firstName: 'Lukas', lastName: 'Müller', storeId: 1, position: 'Sales Associate', salary: 2800, hours: 38 },
+  { id: 3, firstName: 'Sophie', lastName: 'Weber', storeId: 2, position: 'Store Manager', salary: 4100, hours: 40 },
+  { id: 4, firstName: 'Jonas', lastName: 'Fischer', storeId: 2, position: 'Warehouse Assistant', salary: 2600, hours: 35 },
+  { id: 5, firstName: 'Marie', lastName: 'Wagner', storeId: 2, position: 'Sales Associate', salary: 2750, hours: 30 },
+  { id: 6, firstName: 'Felix', lastName: 'Becker', storeId: 3, position: 'Store Manager', salary: 4300, hours: 40 },
+  { id: 7, firstName: 'Laura', lastName: 'Hoffmann', storeId: 3, position: 'Sales Associate', salary: 2900, hours: 40 },
+  { id: 8, firstName: 'Paul', lastName: 'Schäfer', storeId: 3, position: 'Part-Time Assistant', salary: 1400, hours: 20 },
+  { id: 9, firstName: 'Emma', lastName: 'Koch', storeId: 4, position: 'Store Manager', salary: 4000, hours: 40 },
+  { id: 10, firstName: 'Tim', lastName: 'Richter', storeId: 4, position: 'Sales Associate', salary: 2850, hours: 38 },
+  { id: 11, firstName: 'Lena', lastName: 'Klein', storeId: 4, position: 'Part-Time Assistant', salary: 1300, hours: 18 },
+  { id: 12, firstName: 'Max', lastName: 'Wolf', storeId: 1, position: 'Warehouse Assistant', salary: 2650, hours: 37 },
 ]
 
 /* -------------------------------------------------------------------------- */
-/*  HILFSFUNKTIONEN                                                           */
+/*  HELPER FUNCTIONS                                                          */
 /* -------------------------------------------------------------------------- */
 
-// Währung im deutschen Format formatieren (z. B. 4.200 €)
-const formatEuro = (betrag) =>
-  new Intl.NumberFormat('de-DE', {
+// Format currency (e.g. €4,200)
+const formatEuro = (amount) =>
+  new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: 'EUR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(betrag)
+  }).format(amount)
 
-// storeId einem Geschäft zuordnen
-const getStoreName = (storeId, geschaefteListe) =>
-  geschaefteListe.find((g) => g.id === storeId)?.name ?? 'Unbekannt'
+// Map a storeId to its store
+const getStoreName = (storeId, storeList) =>
+  storeList.find((s) => s.id === storeId)?.name ?? 'Unknown'
 
-// Aktuelles Datum auf Deutsch
-const heutigesDatum = () =>
-  new Date().toLocaleDateString('de-DE', {
+// Today's date, formatted
+const todaysDate = () =>
+  new Date().toLocaleDateString('en-GB', {
     weekday: 'long',
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   })
 
-// Deutsche Monatsnamen (Index 0 = Januar)
-const MONATE = [
-  'Januar',
-  'Februar',
-  'März',
+// Month names (index 0 = January)
+const MONTHS = [
+  'January',
+  'February',
+  'March',
   'April',
-  'Mai',
-  'Juni',
-  'Juli',
+  'May',
+  'June',
+  'July',
   'August',
   'September',
-  'Oktober',
+  'October',
   'November',
-  'Dezember',
+  'December',
 ]
 
-// Kurzform für Diagramm-Beschriftungen
-const MONATE_KURZ = [
+// Short form for chart labels
+const MONTHS_SHORT = [
   'Jan',
   'Feb',
-  'Mär',
+  'Mar',
   'Apr',
-  'Mai',
+  'May',
   'Jun',
   'Jul',
   'Aug',
   'Sep',
-  'Okt',
+  'Oct',
   'Nov',
-  'Dez',
+  'Dec',
 ]
 
 /* -------------------------------------------------------------------------- */
@@ -117,40 +117,40 @@ const MONATE_KURZ = [
 
 const NAV_LINKS = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { key: 'geschaefte', label: 'Geschäfte', icon: Store },
-  { key: 'personal', label: 'Personal', icon: Users },
-  { key: 'statistik', label: 'Statistik', icon: BarChart3 },
-  { key: 'einstellungen', label: 'Einstellungen', icon: Settings },
+  { key: 'geschaefte', label: 'Stores', icon: Store },
+  { key: 'personal', label: 'Employees', icon: Users },
+  { key: 'statistik', label: 'Statistics', icon: BarChart3 },
+  { key: 'einstellungen', label: 'Settings', icon: Settings },
 ]
 
 /* -------------------------------------------------------------------------- */
-/*  ANMELDEDATEN (Demo-Login)                                                 */
+/*  LOGIN CREDENTIALS (demo)                                                  */
 /* -------------------------------------------------------------------------- */
 
-const ANMELDEDATEN = {
-  benutzername: 'Geschäft',
-  passwort: 'Geschäft123',
+const LOGIN_CREDENTIALS = {
+  username: 'Business',
+  password: 'Business123',
 }
 
 /* -------------------------------------------------------------------------- */
-/*  LOGIN-ANSICHT                                                             */
+/*  LOGIN VIEW                                                                */
 /* -------------------------------------------------------------------------- */
 
-function LoginView({ onAnmelden }) {
-  const [benutzername, setBenutzername] = useState('')
-  const [passwort, setPasswort] = useState('')
-  const [fehler, setFehler] = useState('')
+function LoginView({ onLogin }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
   const handleSubmit = (event) => {
     event.preventDefault()
     if (
-      benutzername === ANMELDEDATEN.benutzername &&
-      passwort === ANMELDEDATEN.passwort
+      username === LOGIN_CREDENTIALS.username &&
+      password === LOGIN_CREDENTIALS.password
     ) {
-      setFehler('')
-      onAnmelden()
+      setError('')
+      onLogin()
     } else {
-      setFehler('Benutzername oder Passwort ist falsch.')
+      setError('Incorrect username or password.')
     }
   }
 
@@ -161,24 +161,24 @@ function LoginView({ onAnmelden }) {
           <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
             <Building2 className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 text-xl font-bold text-slate-900">BEM Verwaltung</h1>
+          <h1 className="mt-4 text-xl font-bold text-slate-900">BEM Management</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Bitte melden Sie sich an, um fortzufahren
+            Please sign in to continue
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Benutzername
+              Username
             </label>
             <div className="relative">
               <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                value={benutzername}
-                onChange={(e) => setBenutzername(e.target.value)}
-                placeholder="Benutzername"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username"
                 autoComplete="username"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
@@ -187,25 +187,25 @@ function LoginView({ onAnmelden }) {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Passwort
+              Password
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="password"
-                value={passwort}
-                onChange={(e) => setPasswort(e.target.value)}
-                placeholder="Passwort"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
                 autoComplete="current-password"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
             </div>
           </div>
 
-          {fehler && (
+          {error && (
             <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-600">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              {fehler}
+              {error}
             </div>
           )}
 
@@ -213,12 +213,12 @@ function LoginView({ onAnmelden }) {
             type="submit"
             className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
           >
-            Anmelden
+            Sign In
           </button>
         </form>
 
         <p className="mt-6 text-center text-xs text-slate-400">
-          Demo-Zugangsdaten – Benutzername: „Geschäft" · Passwort: „Geschäft123"
+          Demo credentials – Username: "Business" · Password: "Business123"
         </p>
       </div>
     </div>
@@ -237,7 +237,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
 
   return (
     <>
-      {/* Overlay für Mobilgeräte */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/50 md:hidden"
@@ -257,14 +257,14 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
               <Building2 className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-base font-bold text-white">BEM Verwaltung</p>
+              <p className="text-base font-bold text-white">BEM Management</p>
               <p className="text-xs text-slate-400">Business Management</p>
             </div>
           </div>
           <button
             className="text-slate-400 hover:text-white md:hidden"
             onClick={() => setMobileOpen(false)}
-            aria-label="Menü schließen"
+            aria-label="Close menu"
           >
             <X className="h-6 w-6" />
           </button>
@@ -294,7 +294,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
           })}
         </nav>
 
-        {/* Nutzerkarte unten */}
+        {/* User card at the bottom */}
         <div className="border-t border-slate-800 p-4">
           <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 p-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-sm font-bold text-white">
@@ -302,7 +302,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">Michael Krause</p>
-              <p className="truncate text-xs text-slate-400">Geschäftsführung</p>
+              <p className="truncate text-xs text-slate-400">Management</p>
             </div>
           </div>
         </div>
@@ -315,40 +315,40 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
 /*  HEADER                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function Header({ title, onMenuClick, onAbmelden }) {
+function Header({ title, onMenuClick, onLogout }) {
   return (
     <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-slate-200 bg-white px-4 py-4 md:px-8">
-      {/* Menü-Button (mobil) */}
+      {/* Menu button (mobile) */}
       <button
         className="text-slate-600 hover:text-slate-900 md:hidden"
         onClick={onMenuClick}
-        aria-label="Menü öffnen"
+        aria-label="Open menu"
       >
         <Menu className="h-6 w-6" />
       </button>
 
       <div className="hidden md:block">
         <h1 className="text-lg font-bold text-slate-900">{title}</h1>
-        <p className="text-xs text-slate-500">{heutigesDatum()}</p>
+        <p className="text-xs text-slate-500">{todaysDate()}</p>
       </div>
 
-      {/* Suchleiste */}
+      {/* Search bar */}
       <div className="relative ml-auto w-full max-w-xs">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
-          placeholder="Suchen …"
+          placeholder="Search …"
           className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
         />
       </div>
 
-      {/* Benachrichtigungen */}
+      {/* Notifications */}
       <button className="relative rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:bg-slate-50">
         <Bell className="h-5 w-5" />
         <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
       </button>
 
-      {/* Profil-Platzhalter */}
+      {/* Profile placeholder */}
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-sm font-bold text-white">
           MK
@@ -359,12 +359,12 @@ function Header({ title, onMenuClick, onAbmelden }) {
         </div>
       </div>
 
-      {/* Abmelden */}
+      {/* Sign out */}
       <button
-        onClick={onAbmelden}
+        onClick={onLogout}
         className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-        aria-label="Abmelden"
-        title="Abmelden"
+        aria-label="Sign out"
+        title="Sign out"
       >
         <LogOut className="h-5 w-5" />
       </button>
@@ -373,7 +373,7 @@ function Header({ title, onMenuClick, onAbmelden }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  KPI-KARTE                                                                 */
+/*  KPI CARD                                                                  */
 /* -------------------------------------------------------------------------- */
 
 function KpiCard({ icon: Icon, label, value, hint, accent }) {
@@ -394,25 +394,43 @@ function KpiCard({ icon: Icon, label, value, hint, accent }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  DASHBOARD-ANSICHT                                                         */
+/*  DASHBOARD VIEW                                                            */
 /* -------------------------------------------------------------------------- */
 
-function DashboardView({ geschaefte, mitarbeiter, onNeuerMitarbeiter, onNeuesGeschaeft }) {
-  // KPIs dynamisch aus den Daten berechnen
+function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeiter, onNeuesGeschaeft }) {
+  const currentYear = new Date().getFullYear()
+
+  // KPIs computed dynamically from the data
   const kpis = useMemo(() => {
     const aktiveGeschaefte = geschaefte.length
     const gesamtMitarbeiter = mitarbeiter.length
-    const personalkosten = mitarbeiter.reduce((summe, m) => summe + m.salary, 0)
-    const durchschnittStunden =
-      gesamtMitarbeiter > 0
-        ? Math.round(
-            mitarbeiter.reduce((summe, m) => summe + m.hours, 0) / gesamtMitarbeiter,
-          )
-        : 0
-    return { aktiveGeschaefte, gesamtMitarbeiter, personalkosten, durchschnittStunden }
-  }, [geschaefte, mitarbeiter])
 
-  // Mitarbeiter pro Geschäft für das Balkendiagramm
+    // Staff costs for the current year: for each of the 12 months, sum each
+    // employee's recorded salary payments, falling back to their base salary
+    // for months without an explicit entry (same assumption used everywhere
+    // else in the app).
+    const personalkosten = MONTHS.reduce((jahresSumme, _, monatIndex) => {
+      const monatsSumme = mitarbeiter.reduce((summe, m) => {
+        const eintrag = (monatsDaten[m.id] ?? []).find(
+          (e) => e.jahr === currentYear && e.monat === monatIndex,
+        )
+        const gehalt = eintrag
+          ? eintrag.gehaelter.reduce((teilsumme, betrag) => teilsumme + betrag, 0)
+          : m.salary
+        return summe + gehalt
+      }, 0)
+      return jahresSumme + monatsSumme
+    }, 0)
+
+    const teuersterMitarbeiter =
+      gesamtMitarbeiter > 0
+        ? mitarbeiter.reduce((top, m) => (m.salary > top.salary ? m : top))
+        : null
+
+    return { aktiveGeschaefte, gesamtMitarbeiter, personalkosten, teuersterMitarbeiter }
+  }, [geschaefte, mitarbeiter, monatsDaten, currentYear])
+
+  // Employees per store for the bar chart
   const mitarbeiterProGeschaeft = useMemo(() => {
     const daten = geschaefte.map((g) => ({
       name: g.name,
@@ -425,53 +443,61 @@ function DashboardView({ geschaefte, mitarbeiter, onNeuerMitarbeiter, onNeuesGes
 
   return (
     <div className="space-y-6">
-      {/* KPI-Karten */}
+      {/* KPI cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           icon={Store}
-          label="Aktive Geschäfte"
+          label="Active Stores"
           value={kpis.aktiveGeschaefte}
-          hint="Filialen bundesweit"
+          hint="Stores nationwide"
           accent="bg-indigo-50 text-indigo-600"
         />
         <KpiCard
           icon={Users}
-          label="Gesamt-Mitarbeiter"
+          label="Total Employees"
           value={kpis.gesamtMitarbeiter}
-          hint="Aktive Beschäftigte"
+          hint="Active staff"
           accent="bg-emerald-50 text-emerald-600"
         />
         <KpiCard
           icon={Wallet}
-          label="Personalkosten / Monat"
+          label={`Staff Costs ${currentYear}`}
           value={formatEuro(kpis.personalkosten)}
-          hint="Bruttogehälter gesamt"
+          hint="Gross salaries for the current year"
           accent="bg-amber-50 text-amber-600"
         />
         <KpiCard
-          icon={Clock}
-          label="Ø Arbeitsstunden"
-          value={`${kpis.durchschnittStunden} Std.`}
-          hint="pro Woche und Mitarbeiter"
+          icon={Crown}
+          label="Most Expensive"
+          value={
+            kpis.teuersterMitarbeiter
+              ? `${kpis.teuersterMitarbeiter.firstName} ${kpis.teuersterMitarbeiter.lastName}`
+              : '–'
+          }
+          hint={
+            kpis.teuersterMitarbeiter
+              ? `${formatEuro(kpis.teuersterMitarbeiter.salary)} · ${kpis.teuersterMitarbeiter.position}`
+              : 'No employees yet'
+          }
           accent="bg-rose-50 text-rose-600"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Diagramm: Mitarbeiter pro Geschäft */}
+        {/* Chart: employees per store */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                Mitarbeiter pro Geschäft
+                Employees per Store
               </h2>
-              <p className="text-sm text-slate-500">Verteilung nach Filiale</p>
+              <p className="text-sm text-slate-500">Distribution by branch</p>
             </div>
           </div>
 
           <div className="space-y-5">
             {mitarbeiterProGeschaeft.daten.length === 0 && (
-              <p className="text-sm text-slate-400">Noch keine Geschäfte angelegt.</p>
+              <p className="text-sm text-slate-400">No stores created yet.</p>
             )}
             {mitarbeiterProGeschaeft.daten.map((d) => (
               <div key={d.name}>
@@ -495,10 +521,10 @@ function DashboardView({ geschaefte, mitarbeiter, onNeuerMitarbeiter, onNeuesGes
           </div>
         </div>
 
-        {/* Schnellaktionen */}
+        {/* Quick actions */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-bold text-slate-900">Schnellaktionen</h2>
-          <p className="text-sm text-slate-500">Häufig genutzte Funktionen</p>
+          <h2 className="text-base font-bold text-slate-900">Quick Actions</h2>
+          <p className="text-sm text-slate-500">Frequently used functions</p>
 
           <div className="mt-6 space-y-3">
             <button
@@ -506,22 +532,22 @@ function DashboardView({ geschaefte, mitarbeiter, onNeuerMitarbeiter, onNeuesGes
               className="flex w-full items-center gap-3 rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
             >
               <UserPlus className="h-5 w-5" />
-              Neuer Mitarbeiter
+              New Employee
             </button>
             <button
               onClick={onNeuesGeschaeft}
               className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               <PlusCircle className="h-5 w-5 text-indigo-600" />
-              Neues Geschäft
+              New Store
             </button>
           </div>
 
           <div className="mt-6 rounded-xl bg-slate-50 p-4">
-            <p className="text-sm font-medium text-slate-700">Tipp</p>
+            <p className="text-sm font-medium text-slate-700">Tip</p>
             <p className="mt-1 text-xs text-slate-500">
-              Über die Personalverwaltung können Sie Mitarbeiterdaten jederzeit
-              bearbeiten und aktualisieren.
+              You can edit and update employee data anytime in Employee
+              Management.
             </p>
           </div>
         </div>
@@ -531,7 +557,7 @@ function DashboardView({ geschaefte, mitarbeiter, onNeuerMitarbeiter, onNeuesGes
 }
 
 /* -------------------------------------------------------------------------- */
-/*  PERSONALVERWALTUNG-ANSICHT                                                */
+/*  EMPLOYEE MANAGEMENT VIEW                                                  */
 /* -------------------------------------------------------------------------- */
 
 function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen }) {
@@ -571,9 +597,9 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Personalverwaltung</h2>
+          <h2 className="text-lg font-bold text-slate-900">Employee Management</h2>
           <p className="text-sm text-slate-500">
-            {mitarbeiter.length} Mitarbeiter insgesamt
+            {mitarbeiter.length} employees in total
           </p>
         </div>
         <button
@@ -581,40 +607,40 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
           className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
         >
           <UserPlus className="h-4 w-4" />
-          Neuer Mitarbeiter
+          New Employee
         </button>
       </div>
 
-      {/* Formular: Neuen Mitarbeiter anlegen */}
+      {/* Form: add new employee */}
       {formularOffen && (
         <form
           onSubmit={handleSubmit}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
-          <h3 className="text-base font-bold text-slate-900">Neuen Mitarbeiter anlegen</h3>
+          <h3 className="text-base font-bold text-slate-900">Add New Employee</h3>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Vorname
+                First Name
               </label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="z. B. Julia"
+                placeholder="e.g. Julia"
                 required
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Nachname
+                Last Name
               </label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="z. B. Bauer"
+                placeholder="e.g. Bauer"
                 required
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
@@ -627,14 +653,14 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 type="text"
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                placeholder="z. B. Verkäuferin"
+                placeholder="e.g. Sales Associate"
                 required
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Geschäft
+                Store
               </label>
               <select
                 value={storeId}
@@ -642,7 +668,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 required
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               >
-                {geschaefte.length === 0 && <option value="">Kein Geschäft vorhanden</option>}
+                {geschaefte.length === 0 && <option value="">No store available</option>}
                 {geschaefte.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.name} · {g.city}
@@ -652,7 +678,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Gehalt (€)
+                Salary (€)
               </label>
               <input
                 type="number"
@@ -660,13 +686,13 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 step="10"
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
-                placeholder="z. B. 2800"
+                placeholder="e.g. 2800"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Stunden/Woche
+                Hours/Week
               </label>
               <input
                 type="number"
@@ -674,7 +700,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                 step="1"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
-                placeholder="z. B. 38"
+                placeholder="e.g. 38"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
             </div>
@@ -685,20 +711,20 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
               onClick={handleAbbrechen}
               className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Abbrechen
+              Cancel
             </button>
             <button
               type="submit"
               disabled={geschaefte.length === 0}
               className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Mitarbeiter speichern
+              Save Employee
             </button>
           </div>
         </form>
       )}
 
-      {/* Tabelle */}
+      {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
@@ -706,10 +732,10 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
               <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-6 py-4 font-semibold">Name</th>
                 <th className="px-6 py-4 font-semibold">Position</th>
-                <th className="px-6 py-4 font-semibold">Geschäft</th>
-                <th className="px-6 py-4 font-semibold">Gehalt</th>
-                <th className="px-6 py-4 font-semibold">Stunden/Woche</th>
-                <th className="px-6 py-4 text-right font-semibold">Aktionen</th>
+                <th className="px-6 py-4 font-semibold">Store</th>
+                <th className="px-6 py-4 font-semibold">Salary</th>
+                <th className="px-6 py-4 font-semibold">Hours/Week</th>
+                <th className="px-6 py-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -719,7 +745,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                     <button
                       onClick={() => onView(m.id)}
                       className="flex items-center gap-3 text-left"
-                      title="Details ansehen"
+                      title="View details"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-xs font-bold text-white">
                         {m.firstName[0]}
@@ -739,29 +765,29 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                   <td className="px-6 py-4 font-medium text-slate-900">
                     {formatEuro(m.salary)}
                   </td>
-                  <td className="px-6 py-4 text-slate-600">{m.hours} Std.</td>
+                  <td className="px-6 py-4 text-slate-600">{m.hours} hrs</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onView(m.id)}
                         className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                        aria-label={`${m.firstName} ${m.lastName} – Monatsdaten erfassen`}
-                        title="Monatsdaten erfassen"
+                        aria-label={`Enter monthly data for ${m.firstName} ${m.lastName}`}
+                        title="Enter monthly data"
                       >
                         <CalendarDays className="h-4 w-4" />
                       </button>
                       <button
                         className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                        aria-label={`${m.firstName} ${m.lastName} bearbeiten`}
-                        title="Bearbeiten"
+                        aria-label={`Edit ${m.firstName} ${m.lastName}`}
+                        title="Edit"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDelete(m.id)}
                         className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                        aria-label={`${m.firstName} ${m.lastName} löschen`}
-                        title="Löschen"
+                        aria-label={`Delete ${m.firstName} ${m.lastName}`}
+                        title="Delete"
                       >
                         <Trash className="h-4 w-4" />
                       </button>
@@ -776,7 +802,7 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
                     colSpan={6}
                     className="px-6 py-12 text-center text-sm text-slate-400"
                   >
-                    Keine Mitarbeiter vorhanden.
+                    No employees yet.
                   </td>
                 </tr>
               )}
@@ -789,13 +815,13 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
 }
 
 /* -------------------------------------------------------------------------- */
-/*  MITARBEITER-DETAILANSICHT                                                 */
-/*  Monat/Jahr auswählen und Gehalt + Arbeitsstunden dafür erfassen           */
+/*  EMPLOYEE DETAIL VIEW                                                      */
+/*  Select month/year and enter salary + hours worked                        */
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-/*  GEHALTSVERLAUF-DIAGRAMM                                                   */
-/*  Balkendiagramm: Gehalt je Monat (Y: 0–5.000 €, X: Januar–Dezember)        */
+/*  SALARY HISTORY CHART                                                     */
+/*  Bar chart: salary per month (Y: €0–5,000, X: January–December)           */
 /* -------------------------------------------------------------------------- */
 
 const GEHALT_Y_MAX = 5000
@@ -804,13 +830,13 @@ const GEHALT_Y_SCHRITTE = [5000, 4000, 3000, 2000, 1000, 0]
 function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
   const [hoverIndex, setHoverIndex] = useState(null)
 
-  // Ohne konkreten Monatseintrag wird von dem Basisgehalt des Mitarbeiters
-  // ausgegangen – dieselbe Annahme wie im Formular und in der Statistik.
-  // Ein Monatseintrag kann bis zu vier einzelne Gehaltszahlungen enthalten,
-  // die für das Diagramm zur Monatssumme addiert werden.
+  // Without an explicit monthly entry, the employee's base salary is
+  // assumed – the same assumption used in the form and in Statistics.
+  // An entry can contain up to four separate salary payments, which are
+  // summed to a monthly total for the chart.
   const gehaltProMonat = useMemo(
     () =>
-      MONATE.map((_, index) => {
+      MONTHS.map((_, index) => {
         const eintrag = eintraege.find((e) => e.jahr === jahr && e.monat === index)
         return eintrag
           ? eintrag.gehaelter.reduce((summe, betrag) => summe + betrag, 0)
@@ -821,23 +847,23 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h3 className="text-base font-bold text-slate-900">Gehaltsverlauf {jahr}</h3>
+      <h3 className="text-base font-bold text-slate-900">Salary History {jahr}</h3>
       <p className="text-sm text-slate-500">
-        Monatliches Gehalt von {mitarbeiter.firstName} {mitarbeiter.lastName}
+        Monthly salary for {mitarbeiter.firstName} {mitarbeiter.lastName}
       </p>
 
       <div className="mt-6 flex gap-3">
-        {/* Y-Achse */}
+        {/* Y axis */}
         <div className="flex h-56 flex-col justify-between text-right text-xs tabular-nums text-slate-400">
           {GEHALT_Y_SCHRITTE.map((wert) => (
-            <span key={wert}>{wert.toLocaleString('de-DE')} €</span>
+            <span key={wert}>€{wert.toLocaleString('en-GB')}</span>
           ))}
         </div>
 
-        {/* Plotfläche */}
+        {/* Plot area */}
         <div className="flex-1">
           <div className="relative h-56">
-            {/* Gitterlinien */}
+            {/* Gridlines */}
             {GEHALT_Y_SCHRITTE.map((wert) => (
               <div
                 key={wert}
@@ -846,7 +872,7 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
               />
             ))}
 
-            {/* Balken */}
+            {/* Bars */}
             <div className="absolute inset-0 flex items-end justify-between gap-1.5 sm:gap-2.5">
               {gehaltProMonat.map((wert, index) => {
                 const hoehe = Math.min(wert / GEHALT_Y_MAX, 1) * 100
@@ -874,9 +900,9 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
             </div>
           </div>
 
-          {/* X-Achse */}
+          {/* X axis */}
           <div className="mt-2 flex justify-between gap-1.5 text-xs text-slate-400 sm:gap-2.5">
-            {MONATE_KURZ.map((name) => (
+            {MONTHS_SHORT.map((name) => (
               <span key={name} className="flex-1 text-center">
                 {name}
               </span>
@@ -908,9 +934,9 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
     [eintraege, jahr, monat],
   )
 
-  // Beim Wechsel von Monat/Jahr die Felder mit einem bestehenden Eintrag
-  // vorbefüllen – andernfalls mit dem Basisgehalt des Mitarbeiters im
-  // ersten Feld und leeren weiteren Feldern.
+  // When month/year changes, prefill the fields with an existing entry –
+  // otherwise use the employee's base salary in the first field and leave
+  // the remaining fields empty.
   useEffect(() => {
     if (aktuellerEintrag) {
       setGehaltInputs(
@@ -929,7 +955,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jahr, monat, aktuellerEintrag])
 
-  // Bestätigungshinweis nach dem Speichern automatisch wieder ausblenden
+  // Automatically hide the confirmation message after saving
   useEffect(() => {
     if (!gespeichertHinweis) return
     const timer = setTimeout(() => setGespeichertHinweis(false), 2500)
@@ -962,14 +988,14 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 
   return (
     <div className="space-y-6">
-      {/* Zurück-Button + Mitarbeiterkopf */}
+      {/* Back button + employee header */}
       <div>
         <button
           onClick={onZurueck}
           className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
         >
           <ArrowLeft className="h-4 w-4" />
-          Zurück zur Personalverwaltung
+          Back to Employee Management
         </button>
 
         <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -987,37 +1013,37 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
           </div>
           <div className="flex gap-6 text-sm">
             <div>
-              <p className="text-slate-400">Basisgehalt</p>
+              <p className="text-slate-400">Base Salary</p>
               <p className="font-semibold text-slate-900">{formatEuro(mitarbeiter.salary)}</p>
             </div>
             <div>
-              <p className="text-slate-400">Basisstunden</p>
-              <p className="font-semibold text-slate-900">{mitarbeiter.hours} Std./Woche</p>
+              <p className="text-slate-400">Base Hours</p>
+              <p className="font-semibold text-slate-900">{mitarbeiter.hours} hrs/week</p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Formular: Monatsdaten erfassen */}
+        {/* Form: enter monthly data */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Monatsdaten erfassen</h3>
+          <h3 className="text-base font-bold text-slate-900">Enter Monthly Data</h3>
           <p className="text-sm text-slate-500">
-            Kalendermonat und Jahr auswählen, um Gehalt und Arbeitsstunden einzutragen.
+            Select a calendar month and year to enter salary and hours worked.
           </p>
 
           <form onSubmit={handleSpeichern} className="mt-5 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Monat
+                  Month
                 </label>
                 <select
                   value={monat}
                   onChange={(e) => setMonat(Number(e.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
                 >
-                  {MONATE.map((name, index) => (
+                  {MONTHS.map((name, index) => (
                     <option key={name} value={index}>
                       {name}
                     </option>
@@ -1026,7 +1052,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Jahr
+                  Year
                 </label>
                 <select
                   value={jahr}
@@ -1044,7 +1070,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Gehalt (€) – bis zu {GEHALT_SLOTS} Zahlungen pro Monat
+                Salary (€) – up to {GEHALT_SLOTS} payments per month
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {gehaltInputs.map((wert, index) => (
@@ -1054,7 +1080,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
                     min="0"
                     step="10"
                     required={index === 0}
-                    placeholder={`Gehalt ${index + 1}`}
+                    placeholder={`Salary ${index + 1}`}
                     value={wert}
                     onChange={(e) => handleGehaltInputChange(index, e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
@@ -1065,7 +1091,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Arbeitsstunden
+                Hours Worked
               </label>
               <input
                 type="number"
@@ -1084,28 +1110,28 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
                 className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
               >
                 <Save className="h-4 w-4" />
-                Eintrag speichern
+                Save Entry
               </button>
               {gespeichertHinweis && (
                 <span className="text-sm font-medium text-emerald-600">
-                  ✓ Gespeichert für {MONATE[monat]} {jahr}
+                  ✓ Saved for {MONTHS[monat]} {jahr}
                 </span>
               )}
             </div>
           </form>
         </div>
 
-        {/* Erfasste Monatsdaten: Gehälter für den gewählten Monat/Jahr */}
+        {/* Recorded monthly data: salaries for the selected month/year */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Erfasste Monatsdaten</h3>
+          <h3 className="text-base font-bold text-slate-900">Recorded Monthly Data</h3>
           <p className="text-sm text-slate-500">
-            Gehälter für {MONATE[monat]} {jahr}
+            Salaries for {MONTHS[monat]} {jahr}
           </p>
 
           <div className="mt-5 space-y-3">
             {(!aktuellerEintrag || aktuellerEintrag.gehaelter.length === 0) && (
               <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
-                Noch keine Gehaltsdaten für {MONATE[monat]} {jahr} erfasst.
+                No salary data recorded yet for {MONTHS[monat]} {jahr}.
               </p>
             )}
 
@@ -1114,14 +1140,14 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
                 key={index}
                 className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
               >
-                <p className="text-sm font-medium text-slate-700">Gehalt {index + 1}</p>
+                <p className="text-sm font-medium text-slate-700">Salary {index + 1}</p>
                 <div className="flex items-center gap-3">
                   <p className="text-sm font-semibold text-slate-900">{formatEuro(betrag)}</p>
                   <button
                     onClick={() => onGehaltLoeschen(mitarbeiter.id, jahr, monat, index)}
                     className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                    aria-label={`Gehalt ${index + 1} für ${MONATE[monat]} ${jahr} löschen`}
-                    title="Zahlung löschen"
+                    aria-label={`Delete Salary ${index + 1} for ${MONTHS[monat]} ${jahr}`}
+                    title="Delete payment"
                   >
                     <Trash className="h-4 w-4" />
                   </button>
@@ -1131,7 +1157,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 
             {aktuellerEintrag && aktuellerEintrag.gehaelter.length > 0 && (
               <div className="flex items-center justify-between border-t border-slate-200 px-4 pt-4">
-                <p className="text-sm font-bold text-slate-900">Gesamt</p>
+                <p className="text-sm font-bold text-slate-900">Total</p>
                 <p className="text-sm font-bold text-slate-900">{formatEuro(gehaltGesamt)}</p>
               </div>
             )}
@@ -1145,8 +1171,8 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 }
 
 /* -------------------------------------------------------------------------- */
-/*  GESCHÄFTE-ANSICHT                                                         */
-/*  Geschäfte anzeigen sowie modular hinzufügen und löschen                   */
+/*  STORES VIEW                                                              */
+/*  Show stores, and add or delete them                                      */
 /* -------------------------------------------------------------------------- */
 
 function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onAnsehen }) {
@@ -1171,25 +1197,25 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Geschäfte</h2>
-          <p className="text-sm text-slate-500">{geschaefte.length} aktive Geschäfte</p>
+          <h2 className="text-lg font-bold text-slate-900">Stores</h2>
+          <p className="text-sm text-slate-500">{geschaefte.length} active stores</p>
         </div>
         <button
           onClick={() => setFormularOffen((offen) => !offen)}
           className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
         >
           <PlusCircle className="h-4 w-4" />
-          Neues Geschäft
+          New Store
         </button>
       </div>
 
-      {/* Formular: Neues Geschäft anlegen */}
+      {/* Form: add new store */}
       {formularOffen && (
         <form
           onSubmit={handleSubmit}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
-          <h3 className="text-base font-bold text-slate-900">Neues Geschäft anlegen</h3>
+          <h3 className="text-base font-bold text-slate-900">Add New Store</h3>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -1199,20 +1225,20 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="z. B. Filiale Süd"
+                placeholder="e.g. Southside Branch"
                 required
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Stadt
+                City
               </label>
               <input
                 type="text"
                 value={stadt}
                 onChange={(e) => setStadt(e.target.value)}
-                placeholder="z. B. Stuttgart"
+                placeholder="e.g. Stuttgart"
                 required
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
@@ -1224,13 +1250,13 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
               onClick={handleAbbrechen}
               className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Abbrechen
+              Cancel
             </button>
             <button
               type="submit"
               className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
             >
-              Geschäft speichern
+              Save Store
             </button>
           </div>
         </form>
@@ -1258,8 +1284,8 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                   <button
                     onClick={() => onAnsehen(g.id)}
                     className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                    aria-label={`${g.name} – Umsatz erfassen`}
-                    title="Umsatz erfassen"
+                    aria-label={`Enter revenue for ${g.name}`}
+                    title="Enter revenue"
                   >
                     <TrendingUp className="h-4 w-4" />
                   </button>
@@ -1267,11 +1293,11 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                     onClick={() => onLoeschen(g.id)}
                     disabled={anzahl > 0}
                     className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:bg-transparent disabled:hover:text-slate-500"
-                    aria-label={`${g.name} löschen`}
+                    aria-label={`Delete ${g.name}`}
                     title={
                       anzahl > 0
-                        ? 'Zuerst Mitarbeiter einem anderen Geschäft zuordnen'
-                        : 'Geschäft löschen'
+                        ? 'Reassign employees to another store first'
+                        : 'Delete store'
                     }
                   >
                     <Trash className="h-4 w-4" />
@@ -1279,7 +1305,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                 </div>
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                <span className="text-sm text-slate-500">Mitarbeiter</span>
+                <span className="text-sm text-slate-500">Employees</span>
                 <span className="text-sm font-semibold text-slate-900">{anzahl}</span>
               </div>
             </div>
@@ -1288,7 +1314,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
 
         {geschaefte.length === 0 && (
           <p className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-400">
-            Keine Geschäfte vorhanden. Legen Sie über „Neues Geschäft" das erste an.
+            No stores yet. Use "New Store" to create your first one.
           </p>
         )}
       </div>
@@ -1297,8 +1323,8 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
 }
 
 /* -------------------------------------------------------------------------- */
-/*  GESCHÄFT-DETAILANSICHT                                                    */
-/*  Monat/Jahr auswählen und Umsatz dafür erfassen                           */
+/*  STORE DETAIL VIEW                                                        */
+/*  Select month/year and enter revenue for it                               */
 /* -------------------------------------------------------------------------- */
 
 function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeichern, onLoeschen, onZurueck }) {
@@ -1308,8 +1334,8 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
   const [umsatzInput, setUmsatzInput] = useState('')
   const [gespeichertHinweis, setGespeichertHinweis] = useState(false)
 
-  // Beim Wechsel von Monat/Jahr das Feld mit einem bestehenden Eintrag
-  // vorbefüllen – andernfalls leer lassen.
+  // When month/year changes, prefill the field with an existing entry –
+  // otherwise leave it empty.
   useEffect(() => {
     const bestehenderEintrag = eintraege.find(
       (e) => e.jahr === jahr && e.monat === monat,
@@ -1319,7 +1345,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jahr, monat])
 
-  // Bestätigungshinweis nach dem Speichern automatisch wieder ausblenden
+  // Automatically hide the confirmation message after saving
   useEffect(() => {
     if (!gespeichertHinweis) return
     const timer = setTimeout(() => setGespeichertHinweis(false), 2500)
@@ -1347,14 +1373,14 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
 
   return (
     <div className="space-y-6">
-      {/* Zurück-Button + Geschäftskopf */}
+      {/* Back button + store header */}
       <div>
         <button
           onClick={onZurueck}
           className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
         >
           <ArrowLeft className="h-4 w-4" />
-          Zurück zu Geschäfte
+          Back to Stores
         </button>
 
         <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -1366,32 +1392,32 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
             <p className="text-sm text-slate-500">{geschaeft.city}</p>
           </div>
           <div className="text-sm">
-            <p className="text-slate-400">Mitarbeiter</p>
+            <p className="text-slate-400">Employees</p>
             <p className="font-semibold text-slate-900">{mitarbeiterAnzahl}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Formular: Umsatz erfassen */}
+        {/* Form: enter revenue */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Umsatz erfassen</h3>
+          <h3 className="text-base font-bold text-slate-900">Enter Revenue</h3>
           <p className="text-sm text-slate-500">
-            Kalendermonat und Jahr auswählen, um den Umsatz einzutragen.
+            Select a calendar month and year to enter revenue.
           </p>
 
           <form onSubmit={handleSpeichern} className="mt-5 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Monat
+                  Month
                 </label>
                 <select
                   value={monat}
                   onChange={(e) => setMonat(Number(e.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
                 >
-                  {MONATE.map((name, index) => (
+                  {MONTHS.map((name, index) => (
                     <option key={name} value={index}>
                       {name}
                     </option>
@@ -1400,7 +1426,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Jahr
+                  Year
                 </label>
                 <select
                   value={jahr}
@@ -1418,7 +1444,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Umsatz (€)
+                Revenue (€)
               </label>
               <input
                 type="number"
@@ -1427,7 +1453,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
                 required
                 value={umsatzInput}
                 onChange={(e) => setUmsatzInput(e.target.value)}
-                placeholder="z. B. 24000"
+                placeholder="e.g. 24000"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
               />
             </div>
@@ -1438,26 +1464,26 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
                 className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
               >
                 <Save className="h-4 w-4" />
-                Eintrag speichern
+                Save Entry
               </button>
               {gespeichertHinweis && (
                 <span className="text-sm font-medium text-emerald-600">
-                  ✓ Gespeichert für {MONATE[monat]} {jahr}
+                  ✓ Saved for {MONTHS[monat]} {jahr}
                 </span>
               )}
             </div>
           </form>
         </div>
 
-        {/* Verlauf des erfassten Umsatzes */}
+        {/* Recorded revenue history */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">Erfasster Umsatz</h3>
-          <p className="text-sm text-slate-500">Verlauf für {geschaeft.name}</p>
+          <h3 className="text-base font-bold text-slate-900">Recorded Revenue</h3>
+          <p className="text-sm text-slate-500">History for {geschaeft.name}</p>
 
           <div className="mt-5 space-y-3">
             {verlaufSortiert.length === 0 && (
               <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
-                Noch kein Umsatz erfasst.
+                No revenue recorded yet.
               </p>
             )}
 
@@ -1468,15 +1494,15 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
               >
                 <div>
                   <p className="text-sm font-semibold text-slate-900">
-                    {MONATE[e.monat]} {e.jahr}
+                    {MONTHS[e.monat]} {e.jahr}
                   </p>
                   <p className="text-xs text-slate-500">{formatEuro(e.umsatz)}</p>
                 </div>
                 <button
                   onClick={() => onLoeschen(geschaeft.id, e.jahr, e.monat)}
                   className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                  aria-label={`Eintrag ${MONATE[e.monat]} ${e.jahr} löschen`}
-                  title="Eintrag löschen"
+                  aria-label={`Delete entry for ${MONTHS[e.monat]} ${e.jahr}`}
+                  title="Delete entry"
                 >
                   <Trash className="h-4 w-4" />
                 </button>
@@ -1490,11 +1516,11 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
 }
 
 /* -------------------------------------------------------------------------- */
-/*  STATISTIK-ANSICHT                                                         */
-/*  Umsätze, Löhne und Arbeitsstunden je Jahr und Monat berechnet             */
+/*  STATISTICS VIEW                                                          */
+/*  Revenue by year and month                                                */
 /* -------------------------------------------------------------------------- */
 
-function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
+function StatistikView({ geschaefte, umsatzDaten }) {
   const heute = new Date()
   const [jahr, setJahr] = useState(heute.getFullYear())
 
@@ -1504,11 +1530,9 @@ function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Für jeden Monat des gewählten Jahres Umsatz, Löhne und Arbeitsstunden
-  // aus den erfassten Daten berechnen. Ohne konkreten Monatseintrag wird
-  // beim Gehalt/Stunden auf die Basiswerte des Mitarbeiters zurückgegriffen.
+  // Total revenue for each month of the selected year, from the recorded data
   const monatsStatistik = useMemo(() => {
-    return MONATE.map((name, monatIndex) => {
+    return MONTHS.map((name, monatIndex) => {
       const umsatz = geschaefte.reduce((summe, g) => {
         const eintrag = (umsatzDaten[g.id] ?? []).find(
           (e) => e.jahr === jahr && e.monat === monatIndex,
@@ -1516,40 +1540,16 @@ function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
         return summe + (eintrag ? eintrag.umsatz : 0)
       }, 0)
 
-      const loehne = mitarbeiter.reduce((summe, m) => {
-        const eintrag = (monatsDaten[m.id] ?? []).find(
-          (e) => e.jahr === jahr && e.monat === monatIndex,
-        )
-        const monatsGehalt = eintrag
-          ? eintrag.gehaelter.reduce((teilsumme, betrag) => teilsumme + betrag, 0)
-          : m.salary
-        return summe + monatsGehalt
-      }, 0)
-
-      const arbeitsstunden = mitarbeiter.reduce((summe, m) => {
-        const eintrag = (monatsDaten[m.id] ?? []).find(
-          (e) => e.jahr === jahr && e.monat === monatIndex,
-        )
-        return summe + (eintrag ? eintrag.stunden : m.hours)
-      }, 0)
-
-      return { monat: monatIndex, name, umsatz, loehne, arbeitsstunden, gewinn: umsatz - loehne }
+      return { monat: monatIndex, name, umsatz }
     })
-  }, [geschaefte, mitarbeiter, monatsDaten, umsatzDaten, jahr])
+  }, [geschaefte, umsatzDaten, jahr])
 
   const jahresSumme = useMemo(
-    () =>
-      monatsStatistik.reduce(
-        (summe, m) => ({
-          umsatz: summe.umsatz + m.umsatz,
-          loehne: summe.loehne + m.loehne,
-          arbeitsstunden: summe.arbeitsstunden + m.arbeitsstunden,
-          gewinn: summe.gewinn + m.gewinn,
-        }),
-        { umsatz: 0, loehne: 0, arbeitsstunden: 0, gewinn: 0 },
-      ),
+    () => monatsStatistik.reduce((summe, m) => summe + m.umsatz, 0),
     [monatsStatistik],
   )
+
+  const durchschnittProMonat = Math.round(jahresSumme / 12)
 
   const maxUmsatz = Math.max(...monatsStatistik.map((m) => m.umsatz), 1)
 
@@ -1557,9 +1557,9 @@ function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Statistik</h2>
+          <h2 className="text-lg font-bold text-slate-900">Statistics</h2>
           <p className="text-sm text-slate-500">
-            Umsätze, Löhne und Arbeitsstunden je Monat
+            Monthly revenue overview
           </p>
         </div>
         <div>
@@ -1577,53 +1577,32 @@ function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
         </div>
       </div>
 
-      {/* Jahres-KPIs */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Yearly KPIs */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <KpiCard
           icon={TrendingUp}
-          label={`Umsatz ${jahr}`}
-          value={formatEuro(jahresSumme.umsatz)}
-          hint="Summe aller Geschäfte"
+          label={`Revenue ${jahr}`}
+          value={formatEuro(jahresSumme)}
+          hint="Sum across all stores"
           accent="bg-indigo-50 text-indigo-600"
         />
         <KpiCard
-          icon={Wallet}
-          label={`Löhne ${jahr}`}
-          value={formatEuro(jahresSumme.loehne)}
-          hint="Bruttogehälter gesamt"
-          accent="bg-amber-50 text-amber-600"
-        />
-        <KpiCard
-          icon={Clock}
-          label={`Arbeitsstunden ${jahr}`}
-          value={`${jahresSumme.arbeitsstunden.toLocaleString('de-DE')} Std.`}
-          hint="Summe pro Woche × Monate"
-          accent="bg-rose-50 text-rose-600"
-        />
-        <KpiCard
           icon={BarChart3}
-          label={`Gewinn ${jahr}`}
-          value={formatEuro(jahresSumme.gewinn)}
-          hint="Umsatz abzüglich Löhne"
-          accent={
-            jahresSumme.gewinn >= 0
-              ? 'bg-emerald-50 text-emerald-600'
-              : 'bg-rose-50 text-rose-600'
-          }
+          label="Average per Month"
+          value={formatEuro(durchschnittProMonat)}
+          hint={`Average monthly revenue in ${jahr}`}
+          accent="bg-emerald-50 text-emerald-600"
         />
       </div>
 
-      {/* Monatsübersicht */}
+      {/* Monthly overview */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[480px] text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-6 py-4 font-semibold">Monat</th>
-                <th className="px-6 py-4 font-semibold">Umsatz</th>
-                <th className="px-6 py-4 font-semibold">Löhne</th>
-                <th className="px-6 py-4 font-semibold">Arbeitsstunden</th>
-                <th className="px-6 py-4 text-right font-semibold">Gewinn</th>
+                <th className="px-6 py-4 font-semibold">Month</th>
+                <th className="px-6 py-4 font-semibold">Revenue</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -1643,19 +1622,6 @@ function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 tabular-nums text-slate-700">
-                    {formatEuro(m.loehne)}
-                  </td>
-                  <td className="px-6 py-4 tabular-nums text-slate-700">
-                    {m.arbeitsstunden.toLocaleString('de-DE')} Std.
-                  </td>
-                  <td
-                    className={`px-6 py-4 text-right font-medium tabular-nums ${
-                      m.gewinn >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                    }`}
-                  >
-                    {formatEuro(m.gewinn)}
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1667,43 +1633,43 @@ function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  EINSTELLUNGEN-ANSICHT                                                     */
+/*  SETTINGS VIEW                                                            */
 /* -------------------------------------------------------------------------- */
 
 function EinstellungenView() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-slate-900">Einstellungen</h2>
-        <p className="text-sm text-slate-500">Verwalten Sie Ihre Konto- und Systemeinstellungen</p>
+        <h2 className="text-lg font-bold text-slate-900">Settings</h2>
+        <p className="text-sm text-slate-500">Manage your account and system settings</p>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-bold text-slate-900">Unternehmensprofil</h3>
+        <h3 className="text-base font-bold text-slate-900">Company Profile</h3>
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Firmenname
+              Company Name
             </label>
             <input
               type="text"
-              defaultValue="BEM Verwaltung GmbH"
+              defaultValue="BEM Management GmbH"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
             />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              E-Mail-Adresse
+              Email Address
             </label>
             <input
               type="email"
-              defaultValue="verwaltung@bem-gmbh.de"
+              defaultValue="info@bem-gmbh.de"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
             />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Geschäft (Hauptsitz)
+              Store (Headquarters)
             </label>
             <input
               type="text"
@@ -1713,21 +1679,21 @@ function EinstellungenView() {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Währung
+              Currency
             </label>
             <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100">
               <option>Euro (€)</option>
-              <option>US-Dollar ($)</option>
-              <option>Schweizer Franken (CHF)</option>
+              <option>US Dollar ($)</option>
+              <option>Swiss Franc (CHF)</option>
             </select>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-            Abbrechen
+            Cancel
           </button>
           <button className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700">
-            Änderungen speichern
+            Save Changes
           </button>
         </div>
       </div>
@@ -1736,30 +1702,30 @@ function EinstellungenView() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  HAUPTKOMPONENTE                                                           */
+/*  MAIN COMPONENT                                                            */
 /* -------------------------------------------------------------------------- */
 
 const VIEW_TITEL = {
   dashboard: 'Dashboard',
-  geschaefte: 'Geschäfte',
-  personal: 'Personalverwaltung',
-  statistik: 'Statistik',
-  einstellungen: 'Einstellungen',
+  geschaefte: 'Stores',
+  personal: 'Employee Management',
+  statistik: 'Statistics',
+  einstellungen: 'Settings',
 }
 
 export default function App() {
   const [istAngemeldet, setIstAngemeldet] = useState(false)
   const [activeView, setActiveView] = useState('dashboard')
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [mitarbeiter, setMitarbeiter] = useState(MITARBEITER)
-  const [geschaefte, setGeschaefte] = useState(GESCHAEFTE)
+  const [mitarbeiter, setMitarbeiter] = useState(EMPLOYEES)
+  const [geschaefte, setGeschaefte] = useState(STORES)
   const [selectedMitarbeiterId, setSelectedMitarbeiterId] = useState(null)
   const [selectedGeschaeftId, setSelectedGeschaeftId] = useState(null)
 
-  // Monatsdaten je Mitarbeiter: { [mitarbeiterId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
+  // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
 
-  // Umsatzdaten je Geschäft: { [geschaeftId]: [{ jahr, monat, umsatz }] }
+  // Revenue data per store: { [storeId]: [{ jahr, monat, umsatz }] }
   const [umsatzDaten, setUmsatzDaten] = useState({})
 
   const handleAbmelden = () => {
@@ -1768,15 +1734,15 @@ export default function App() {
   }
 
   if (!istAngemeldet) {
-    return <LoginView onAnmelden={() => setIstAngemeldet(true)} />
+    return <LoginView onLogin={() => setIstAngemeldet(true)} />
   }
 
-  // Mitarbeiter löschen (aus dem State entfernen)
+  // Remove an employee from state
   const handleDelete = (id) => {
     setMitarbeiter((prev) => prev.filter((m) => m.id !== id))
   }
 
-  // Neuen Mitarbeiter anlegen
+  // Add a new employee
   const handleMitarbeiterHinzufuegen = (daten) => {
     setMitarbeiter((prev) => {
       const neueId = Math.max(0, ...prev.map((m) => m.id)) + 1
@@ -1784,7 +1750,7 @@ export default function App() {
     })
   }
 
-  // Neues Geschäft anlegen
+  // Add a new store
   const handleGeschaeftHinzufuegen = (name, city) => {
     setGeschaefte((prev) => {
       const neueId = Math.max(0, ...prev.map((g) => g.id)) + 1
@@ -1792,7 +1758,7 @@ export default function App() {
     })
   }
 
-  // Geschäft löschen (aus dem State entfernen)
+  // Remove a store from state
   const handleGeschaeftLoeschen = (id) => {
     setGeschaefte((prev) => prev.filter((g) => g.id !== id))
   }
@@ -1802,8 +1768,8 @@ export default function App() {
     setActiveView('geschaeft-detail')
   }
 
-  // Umsatzeintrag für ein Geschäft speichern oder – falls für den
-  // Monat/Jahr bereits vorhanden – aktualisieren
+  // Save a revenue entry for a store, or update it if one already exists
+  // for that month/year
   const handleUmsatzSpeichern = (geschaeftId, jahr, monat, umsatz) => {
     setUmsatzDaten((prev) => {
       const bestehendeEintraege = prev[geschaeftId] ?? []
@@ -1831,9 +1797,8 @@ export default function App() {
     setActiveView('personal-detail')
   }
 
-  // Monatseintrag (bis zu vier Gehaltszahlungen + Arbeitsstunden) für einen
-  // Mitarbeiter speichern oder – falls für den Monat/Jahr bereits
-  // vorhanden – aktualisieren
+  // Save a monthly entry (up to four salary payments + hours worked) for
+  // an employee, or update it if one already exists for that month/year
   const handleMonatSpeichern = (mitarbeiterId, jahr, monat, gehaelter, stunden) => {
     setMonatsDaten((prev) => {
       const bestehendeEintraege = prev[mitarbeiterId] ?? []
@@ -1847,8 +1812,8 @@ export default function App() {
     })
   }
 
-  // Einzelne Gehaltszahlung aus einem Monatseintrag entfernen – wird der
-  // Eintrag dadurch leer, wird er komplett entfernt
+  // Remove a single salary payment from a monthly entry – if that empties
+  // the entry, remove it entirely
   const handleGehaltLoeschen = (mitarbeiterId, jahr, monat, index) => {
     setMonatsDaten((prev) => ({
       ...prev,
@@ -1871,6 +1836,7 @@ export default function App() {
           <DashboardView
             geschaefte={geschaefte}
             mitarbeiter={mitarbeiter}
+            monatsDaten={monatsDaten}
             onNeuerMitarbeiter={() => setActiveView('personal')}
             onNeuesGeschaeft={() => setActiveView('geschaefte')}
           />
@@ -1931,8 +1897,6 @@ export default function App() {
         return (
           <StatistikView
             geschaefte={geschaefte}
-            mitarbeiter={mitarbeiter}
-            monatsDaten={monatsDaten}
             umsatzDaten={umsatzDaten}
           />
         )
@@ -1963,7 +1927,7 @@ export default function App() {
         <Header
           title={headerTitel}
           onMenuClick={() => setMobileOpen(true)}
-          onAbmelden={handleAbmelden}
+          onLogout={handleAbmelden}
         />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">{renderView()}</main>
