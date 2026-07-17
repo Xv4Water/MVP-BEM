@@ -806,11 +806,15 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
 
   // Ohne konkreten Monatseintrag wird von dem Basisgehalt des Mitarbeiters
   // ausgegangen – dieselbe Annahme wie im Formular und in der Statistik.
+  // Ein Monatseintrag kann bis zu vier einzelne Gehaltszahlungen enthalten,
+  // die für das Diagramm zur Monatssumme addiert werden.
   const gehaltProMonat = useMemo(
     () =>
       MONATE.map((_, index) => {
         const eintrag = eintraege.find((e) => e.jahr === jahr && e.monat === index)
-        return eintrag ? eintrag.gehalt : mitarbeiter.salary
+        return eintrag
+          ? eintrag.gehaelter.reduce((summe, betrag) => summe + betrag, 0)
+          : mitarbeiter.salary
       }),
     [eintraege, jahr, mitarbeiter.salary],
   )
@@ -884,25 +888,46 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
   )
 }
 
-function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern, onLoeschen, onZurueck }) {
+const GEHALT_SLOTS = 4
+
+function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern, onGehaltLoeschen, onZurueck }) {
   const heute = new Date()
   const [jahr, setJahr] = useState(heute.getFullYear())
   const [monat, setMonat] = useState(heute.getMonth())
-  const [gehaltInput, setGehaltInput] = useState(String(mitarbeiter.salary))
+  const [gehaltInputs, setGehaltInputs] = useState([
+    String(mitarbeiter.salary),
+    '',
+    '',
+    '',
+  ])
   const [stundenInput, setStundenInput] = useState(String(mitarbeiter.hours))
   const [gespeichertHinweis, setGespeichertHinweis] = useState(false)
 
+  const aktuellerEintrag = useMemo(
+    () => eintraege.find((e) => e.jahr === jahr && e.monat === monat),
+    [eintraege, jahr, monat],
+  )
+
   // Beim Wechsel von Monat/Jahr die Felder mit einem bestehenden Eintrag
-  // vorbefüllen – andernfalls mit den Basiswerten des Mitarbeiters.
+  // vorbefüllen – andernfalls mit dem Basisgehalt des Mitarbeiters im
+  // ersten Feld und leeren weiteren Feldern.
   useEffect(() => {
-    const bestehenderEintrag = eintraege.find(
-      (e) => e.jahr === jahr && e.monat === monat,
-    )
-    setGehaltInput(String(bestehenderEintrag ? bestehenderEintrag.gehalt : mitarbeiter.salary))
-    setStundenInput(String(bestehenderEintrag ? bestehenderEintrag.stunden : mitarbeiter.hours))
+    if (aktuellerEintrag) {
+      setGehaltInputs(
+        Array.from({ length: GEHALT_SLOTS }, (_, i) =>
+          aktuellerEintrag.gehaelter[i] !== undefined
+            ? String(aktuellerEintrag.gehaelter[i])
+            : '',
+        ),
+      )
+      setStundenInput(String(aktuellerEintrag.stunden))
+    } else {
+      setGehaltInputs([String(mitarbeiter.salary), '', '', ''])
+      setStundenInput(String(mitarbeiter.hours))
+    }
     setGespeichertHinweis(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jahr, monat])
+  }, [jahr, monat, aktuellerEintrag])
 
   // Bestätigungshinweis nach dem Speichern automatisch wieder ausblenden
   useEffect(() => {
@@ -917,17 +942,23 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const verlaufSortiert = useMemo(
-    () =>
-      [...eintraege].sort((a, b) => b.jahr - a.jahr || b.monat - a.monat),
-    [eintraege],
-  )
+  const handleGehaltInputChange = (index, wert) => {
+    setGehaltInputs((prev) => prev.map((v, i) => (i === index ? wert : v)))
+  }
 
   const handleSpeichern = (event) => {
     event.preventDefault()
-    onSpeichern(mitarbeiter.id, jahr, monat, Number(gehaltInput), Number(stundenInput))
+    const gehaelter = gehaltInputs
+      .map((wert) => Number(wert))
+      .filter((wert) => wert > 0)
+    if (gehaelter.length === 0) return
+    onSpeichern(mitarbeiter.id, jahr, monat, gehaelter, Number(stundenInput))
     setGespeichertHinweis(true)
   }
+
+  const gehaltGesamt = aktuellerEintrag
+    ? aktuellerEintrag.gehaelter.reduce((summe, betrag) => summe + betrag, 0)
+    : 0
 
   return (
     <div className="space-y-6">
@@ -1013,17 +1044,23 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Gehalt (€)
+                Gehalt (€) – bis zu {GEHALT_SLOTS} Zahlungen pro Monat
               </label>
-              <input
-                type="number"
-                min="0"
-                step="10"
-                required
-                value={gehaltInput}
-                onChange={(e) => setGehaltInput(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
-              />
+              <div className="grid grid-cols-2 gap-3">
+                {gehaltInputs.map((wert, index) => (
+                  <input
+                    key={index}
+                    type="number"
+                    min="0"
+                    step="10"
+                    required={index === 0}
+                    placeholder={`Gehalt ${index + 1}`}
+                    value={wert}
+                    onChange={(e) => handleGehaltInputChange(index, e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                  />
+                ))}
+              </div>
             </div>
 
             <div>
@@ -1058,41 +1095,46 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
           </form>
         </div>
 
-        {/* Verlauf der erfassten Monatsdaten */}
+        {/* Erfasste Monatsdaten: Gehälter für den gewählten Monat/Jahr */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-base font-bold text-slate-900">Erfasste Monatsdaten</h3>
-          <p className="text-sm text-slate-500">Verlauf für {mitarbeiter.firstName} {mitarbeiter.lastName}</p>
+          <p className="text-sm text-slate-500">
+            Gehälter für {MONATE[monat]} {jahr}
+          </p>
 
           <div className="mt-5 space-y-3">
-            {verlaufSortiert.length === 0 && (
+            {(!aktuellerEintrag || aktuellerEintrag.gehaelter.length === 0) && (
               <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
-                Noch keine Monatsdaten erfasst.
+                Noch keine Gehaltsdaten für {MONATE[monat]} {jahr} erfasst.
               </p>
             )}
 
-            {verlaufSortiert.map((e) => (
+            {aktuellerEintrag?.gehaelter.map((betrag, index) => (
               <div
-                key={`${e.jahr}-${e.monat}`}
+                key={index}
                 className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
               >
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {MONATE[e.monat]} {e.jahr}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {formatEuro(e.gehalt)} · {e.stunden} Std.
-                  </p>
+                <p className="text-sm font-medium text-slate-700">Gehalt {index + 1}</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-semibold text-slate-900">{formatEuro(betrag)}</p>
+                  <button
+                    onClick={() => onGehaltLoeschen(mitarbeiter.id, jahr, monat, index)}
+                    className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                    aria-label={`Gehalt ${index + 1} für ${MONATE[monat]} ${jahr} löschen`}
+                    title="Zahlung löschen"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => onLoeschen(mitarbeiter.id, e.jahr, e.monat)}
-                  className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                  aria-label={`Eintrag ${MONATE[e.monat]} ${e.jahr} löschen`}
-                  title="Eintrag löschen"
-                >
-                  <Trash className="h-4 w-4" />
-                </button>
               </div>
             ))}
+
+            {aktuellerEintrag && aktuellerEintrag.gehaelter.length > 0 && (
+              <div className="flex items-center justify-between border-t border-slate-200 px-4 pt-4">
+                <p className="text-sm font-bold text-slate-900">Gesamt</p>
+                <p className="text-sm font-bold text-slate-900">{formatEuro(gehaltGesamt)}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1478,7 +1520,10 @@ function StatistikView({ geschaefte, mitarbeiter, monatsDaten, umsatzDaten }) {
         const eintrag = (monatsDaten[m.id] ?? []).find(
           (e) => e.jahr === jahr && e.monat === monatIndex,
         )
-        return summe + (eintrag ? eintrag.gehalt : m.salary)
+        const monatsGehalt = eintrag
+          ? eintrag.gehaelter.reduce((teilsumme, betrag) => teilsumme + betrag, 0)
+          : m.salary
+        return summe + monatsGehalt
       }, 0)
 
       const arbeitsstunden = mitarbeiter.reduce((summe, m) => {
@@ -1711,7 +1756,7 @@ export default function App() {
   const [selectedMitarbeiterId, setSelectedMitarbeiterId] = useState(null)
   const [selectedGeschaeftId, setSelectedGeschaeftId] = useState(null)
 
-  // Monatsdaten je Mitarbeiter: { [mitarbeiterId]: [{ jahr, monat, gehalt, stunden }] }
+  // Monatsdaten je Mitarbeiter: { [mitarbeiterId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
 
   // Umsatzdaten je Geschäft: { [geschaeftId]: [{ jahr, monat, umsatz }] }
@@ -1786,9 +1831,10 @@ export default function App() {
     setActiveView('personal-detail')
   }
 
-  // Monatseintrag (Gehalt + Arbeitsstunden) für einen Mitarbeiter speichern
-  // oder – falls für den Monat/Jahr bereits vorhanden – aktualisieren
-  const handleMonatSpeichern = (mitarbeiterId, jahr, monat, gehalt, stunden) => {
+  // Monatseintrag (bis zu vier Gehaltszahlungen + Arbeitsstunden) für einen
+  // Mitarbeiter speichern oder – falls für den Monat/Jahr bereits
+  // vorhanden – aktualisieren
+  const handleMonatSpeichern = (mitarbeiterId, jahr, monat, gehaelter, stunden) => {
     setMonatsDaten((prev) => {
       const bestehendeEintraege = prev[mitarbeiterId] ?? []
       const ohneAktuellenMonat = bestehendeEintraege.filter(
@@ -1796,17 +1842,22 @@ export default function App() {
       )
       return {
         ...prev,
-        [mitarbeiterId]: [...ohneAktuellenMonat, { jahr, monat, gehalt, stunden }],
+        [mitarbeiterId]: [...ohneAktuellenMonat, { jahr, monat, gehaelter, stunden }],
       }
     })
   }
 
-  const handleMonatLoeschen = (mitarbeiterId, jahr, monat) => {
+  // Einzelne Gehaltszahlung aus einem Monatseintrag entfernen – wird der
+  // Eintrag dadurch leer, wird er komplett entfernt
+  const handleGehaltLoeschen = (mitarbeiterId, jahr, monat, index) => {
     setMonatsDaten((prev) => ({
       ...prev,
-      [mitarbeiterId]: (prev[mitarbeiterId] ?? []).filter(
-        (e) => !(e.jahr === jahr && e.monat === monat),
-      ),
+      [mitarbeiterId]: (prev[mitarbeiterId] ?? [])
+        .map((e) => {
+          if (e.jahr !== jahr || e.monat !== monat) return e
+          return { ...e, gehaelter: e.gehaelter.filter((_, i) => i !== index) }
+        })
+        .filter((e) => e.gehaelter.length > 0),
     }))
   }
 
@@ -1872,7 +1923,7 @@ export default function App() {
             geschaefte={geschaefte}
             eintraege={monatsDaten[selectedMitarbeiter.id] ?? []}
             onSpeichern={handleMonatSpeichern}
-            onLoeschen={handleMonatLoeschen}
+            onGehaltLoeschen={handleGehaltLoeschen}
             onZurueck={() => setActiveView('personal')}
           />
         )
