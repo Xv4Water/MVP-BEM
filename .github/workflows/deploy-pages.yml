@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - claude/german-business-dashboard-mvp-t0sz3c
+      - main
   workflow_dispatch:
 
 permissions:
