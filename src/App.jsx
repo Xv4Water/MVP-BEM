@@ -95,6 +95,22 @@ const MONATE = [
   'Dezember',
 ]
 
+// Kurzform für Diagramm-Beschriftungen
+const MONATE_KURZ = [
+  'Jan',
+  'Feb',
+  'Mär',
+  'Apr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Dez',
+]
+
 /* -------------------------------------------------------------------------- */
 /*  NAVIGATION                                                                */
 /* -------------------------------------------------------------------------- */
@@ -777,6 +793,97 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen
 /*  Monat/Jahr auswählen und Gehalt + Arbeitsstunden dafür erfassen           */
 /* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
+/*  GEHALTSVERLAUF-DIAGRAMM                                                   */
+/*  Balkendiagramm: Gehalt je Monat (Y: 0–5.000 €, X: Januar–Dezember)        */
+/* -------------------------------------------------------------------------- */
+
+const GEHALT_Y_MAX = 5000
+const GEHALT_Y_SCHRITTE = [5000, 4000, 3000, 2000, 1000, 0]
+
+function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
+  const [hoverIndex, setHoverIndex] = useState(null)
+
+  // Ohne konkreten Monatseintrag wird von dem Basisgehalt des Mitarbeiters
+  // ausgegangen – dieselbe Annahme wie im Formular und in der Statistik.
+  const gehaltProMonat = useMemo(
+    () =>
+      MONATE.map((_, index) => {
+        const eintrag = eintraege.find((e) => e.jahr === jahr && e.monat === index)
+        return eintrag ? eintrag.gehalt : mitarbeiter.salary
+      }),
+    [eintraege, jahr, mitarbeiter.salary],
+  )
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 className="text-base font-bold text-slate-900">Gehaltsverlauf {jahr}</h3>
+      <p className="text-sm text-slate-500">
+        Monatliches Gehalt von {mitarbeiter.firstName} {mitarbeiter.lastName}
+      </p>
+
+      <div className="mt-6 flex gap-3">
+        {/* Y-Achse */}
+        <div className="flex h-56 flex-col justify-between text-right text-xs tabular-nums text-slate-400">
+          {GEHALT_Y_SCHRITTE.map((wert) => (
+            <span key={wert}>{wert.toLocaleString('de-DE')} €</span>
+          ))}
+        </div>
+
+        {/* Plotfläche */}
+        <div className="flex-1">
+          <div className="relative h-56">
+            {/* Gitterlinien */}
+            {GEHALT_Y_SCHRITTE.map((wert) => (
+              <div
+                key={wert}
+                className="absolute inset-x-0 border-t border-slate-100"
+                style={{ top: `${100 - (wert / GEHALT_Y_MAX) * 100}%` }}
+              />
+            ))}
+
+            {/* Balken */}
+            <div className="absolute inset-0 flex items-end justify-between gap-1.5 sm:gap-2.5">
+              {gehaltProMonat.map((wert, index) => {
+                const hoehe = Math.min(wert / GEHALT_Y_MAX, 1) * 100
+                return (
+                  <div
+                    key={index}
+                    className="relative flex h-full flex-1 items-end justify-center"
+                    onMouseEnter={() => setHoverIndex(index)}
+                    onMouseLeave={() => setHoverIndex(null)}
+                  >
+                    {hoverIndex === index && (
+                      <div className="pointer-events-none absolute -top-8 z-10 whitespace-nowrap rounded-lg bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-lg">
+                        {formatEuro(wert)}
+                      </div>
+                    )}
+                    <div
+                      className={`w-full max-w-[28px] rounded-t-[4px] transition-colors ${
+                        hoverIndex === index ? 'bg-indigo-600' : 'bg-indigo-500'
+                      }`}
+                      style={{ height: `${hoehe}%` }}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* X-Achse */}
+          <div className="mt-2 flex justify-between gap-1.5 text-xs text-slate-400 sm:gap-2.5">
+            {MONATE_KURZ.map((name) => (
+              <span key={name} className="flex-1 text-center">
+                {name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern, onLoeschen, onZurueck }) {
   const heute = new Date()
   const [jahr, setJahr] = useState(heute.getFullYear())
@@ -989,6 +1096,8 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
           </div>
         </div>
       </div>
+
+      <GehaltVerlaufChart mitarbeiter={mitarbeiter} eintraege={eintraege} jahr={jahr} />
     </div>
   )
 }
