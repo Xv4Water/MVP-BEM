@@ -85,6 +85,16 @@ const formatEuro = (amount) =>
     maximumFractionDigits: 0,
   }).format(amount)
 
+// Format currency in compact "k" form (e.g. €110k) for the annual cost chart
+const formatEuroK = (amount) => `€${Math.round(amount / 1000)}k`
+
+// Mock annual cost figures per store, used for the Dashboard's illustrative
+// "Annual Store Costs" chart. Falls back to a deterministic estimate for any
+// store beyond the four seeded ones.
+const MOCK_ANNUAL_COSTS = { 1: 110000, 2: 105000, 3: 105000, 4: 110000 }
+const getMockAnnualCost = (storeId) =>
+  MOCK_ANNUAL_COSTS[storeId] ?? 100000 + ((storeId * 5000) % 30000)
+
 // Map a storeId to its store
 const getStoreName = (storeId, storeList) =>
   storeList.find((s) => s.id === storeId)?.name ?? 'Unknown'
@@ -501,7 +511,7 @@ function KpiCard({ icon: Icon, label, value, hint, accent, variant = 'standard' 
 /*  DASHBOARD VIEW                                                            */
 /* -------------------------------------------------------------------------- */
 
-function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQuickAction }) {
+function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) {
   const currentYear = new Date().getFullYear()
 
   // KPIs computed dynamically from the data
@@ -534,17 +544,17 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
     return { aktiveGeschaefte, gesamtMitarbeiter, personalkosten, teuersterMitarbeiter }
   }, [geschaefte, mitarbeiter, monatsDaten, currentYear])
 
-  // Employees per store for the bar chart
-  const mitarbeiterProGeschaeft = useMemo(() => {
-    const daten = geschaefte.map((g) => ({
-      id: g.id,
-      name: g.name,
-      city: g.city,
-      anzahl: mitarbeiter.filter((m) => m.storeId === g.id).length,
-    }))
-    const max = Math.max(...daten.map((d) => d.anzahl), 1)
-    return { daten, max }
-  }, [geschaefte, mitarbeiter])
+  // Annual costs per store for the bar chart (illustrative mock figures)
+  const jaehrlicheKostenProGeschaeft = useMemo(
+    () =>
+      geschaefte.map((g) => ({
+        id: g.id,
+        name: g.name,
+        kosten: getMockAnnualCost(g.id),
+      })),
+    [geschaefte],
+  )
+  const KOSTEN_ACHSE_MAX = 150000
 
   return (
     <div className="space-y-6">
@@ -591,45 +601,47 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Chart: employees per store */}
+        {/* Chart: annual costs per store */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 lg:col-span-2">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-white">
-                Employees per Store
+                Annual Store Costs {currentYear}
               </h2>
-              <p className="text-sm text-slate-400">Click a store to view its employees</p>
+              <p className="text-sm text-slate-400">Annual costs and revenue by branch</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            {mitarbeiterProGeschaeft.daten.length === 0 && (
+            {jaehrlicheKostenProGeschaeft.length === 0 && (
               <p className="text-sm text-slate-500">No stores created yet.</p>
             )}
-            {mitarbeiterProGeschaeft.daten.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => onStoreClick(d.id)}
-                className="w-full cursor-pointer rounded-2xl p-2 text-left transition-colors hover:bg-white/5"
-              >
+            {jaehrlicheKostenProGeschaeft.map((d) => (
+              <div key={d.id} className="rounded-2xl p-2">
                 <div className="mb-1.5 flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-200">
-                    {d.name}{' '}
-                    <span className="text-slate-500">· {d.city}</span>
-                  </span>
-                  <span className="font-semibold text-white">{d.anzahl}</span>
+                  <span className="font-medium text-slate-200">{d.name}</span>
+                  <span className="font-semibold text-white">{formatEuroK(d.kosten)}</span>
                 </div>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 transition-all duration-500"
                     style={{
-                      width: `${(d.anzahl / mitarbeiterProGeschaeft.max) * 100}%`,
+                      width: `${Math.min((d.kosten / KOSTEN_ACHSE_MAX) * 100, 100)}%`,
                     }}
                   />
                 </div>
-              </button>
+              </div>
             ))}
           </div>
+
+          {jaehrlicheKostenProGeschaeft.length > 0 && (
+            <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+              <span>€0k</span>
+              <span>€50k</span>
+              <span>€100k</span>
+              <span>€150k</span>
+            </div>
+          )}
         </div>
 
         {/* Quick actions */}
@@ -664,8 +676,8 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
           <div className="mt-6 rounded-2xl bg-white/5 p-4">
             <p className="text-sm font-medium text-slate-200">Tip</p>
             <p className="mt-1 text-xs text-slate-400">
-              Click any store in "Employees per Store" to view, add, or
-              manage its staff.
+              Open "Branch Locations" from the Stores page to view, add, or
+              manage a store's staff.
             </p>
           </div>
         </div>
@@ -1043,7 +1055,7 @@ function MitarbeiterDetailView({
 /*  Show stores, and add or delete them                                      */
 /* -------------------------------------------------------------------------- */
 
-function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onAnsehen }) {
+function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onAnsehen, onOpenBranchLocations }) {
   const [formularOffen, setFormularOffen] = useState(false)
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
@@ -1070,13 +1082,22 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
           <h2 className="text-lg font-bold text-white">Stores</h2>
           <p className="text-sm text-slate-400">{geschaefte.length} active stores</p>
         </div>
-        <button
-          onClick={() => setFormularOffen((offen) => !offen)}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
-        >
-          <PlusCircle className="h-4 w-4" />
-          New Store
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onOpenBranchLocations}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+          >
+            <Store className="h-4 w-4 text-lime-400" />
+            Branch Locations
+          </button>
+          <button
+            onClick={() => setFormularOffen((offen) => !offen)}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
+          >
+            <PlusCircle className="h-4 w-4" />
+            New Store
+          </button>
+        </div>
       </div>
 
       {/* Form: add new store */}
@@ -1859,6 +1880,56 @@ function StoreEmployeesModal({
 }
 
 /* -------------------------------------------------------------------------- */
+/*  BRANCH LOCATIONS MODAL                                                    */
+/*  Opened from the Stores page – a quick glass overview of every branch      */
+/*  with a mock annual cost summary; clicking a card opens that store's       */
+/*  specific detail modal (StoreEmployeesModal).                              */
+/* -------------------------------------------------------------------------- */
+
+function BranchLocationsModal({ geschaefte, onClose, onSelectStore }) {
+  return (
+    <ModalOverlay onClose={onClose} maxWidthClass="max-w-lg">
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-white">Branch Locations</h2>
+          <p className="text-sm text-slate-400">Select a branch to view its details</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-xl p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {geschaefte.length === 0 && (
+          <p className="text-sm text-slate-500">No stores created yet.</p>
+        )}
+        {geschaefte.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => onSelectStore(g.id)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-lime-400/30 hover:bg-lime-400/10"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lime-400/10 text-lime-400">
+              <Store className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="font-bold text-white">{g.name}</p>
+              <p className="text-sm text-slate-400">
+                {formatEuro(getMockAnnualCost(g.id))} Annual Costs
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </ModalOverlay>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  QUICK ACTION MODALS (Dashboard)                                           */
 /* -------------------------------------------------------------------------- */
 
@@ -2223,6 +2294,8 @@ export default function App() {
   const [selectedStoreId, setSelectedStoreId] = useState(null)
   // Which Dashboard "Quick Actions" modal is open: 'store' | 'employee' | 'salary' | null
   const [quickModal, setQuickModal] = useState(null)
+  // "Branch Locations" overview modal, opened from the Stores page
+  const [branchLocationsOpen, setBranchLocationsOpen] = useState(false)
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
@@ -2354,7 +2427,6 @@ export default function App() {
             geschaefte={geschaefte}
             mitarbeiter={mitarbeiter}
             monatsDaten={monatsDaten}
-            onStoreClick={(id) => setSelectedStoreId(id)}
             onQuickAction={(type) => setQuickModal(type)}
           />
         )
@@ -2366,6 +2438,7 @@ export default function App() {
             onHinzufuegen={handleGeschaeftHinzufuegen}
             onLoeschen={handleGeschaeftLoeschen}
             onAnsehen={handleGeschaeftAnsehen}
+            onOpenBranchLocations={() => setBranchLocationsOpen(true)}
           />
         )
       case 'geschaeft-detail':
@@ -2443,6 +2516,17 @@ export default function App() {
           onDelete={handleDelete}
           onMonatSpeichern={handleMonatSpeichern}
           onGehaltLoeschen={handleGehaltLoeschen}
+        />
+      )}
+
+      {branchLocationsOpen && (
+        <BranchLocationsModal
+          geschaefte={geschaefte}
+          onClose={() => setBranchLocationsOpen(false)}
+          onSelectStore={(id) => {
+            setSelectedStoreId(id)
+            setBranchLocationsOpen(false)
+          }}
         />
       )}
 
