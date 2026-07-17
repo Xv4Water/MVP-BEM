@@ -13,11 +13,9 @@ import {
   Crown,
   UserPlus,
   PlusCircle,
-  Edit,
   Trash,
   ArrowLeft,
   Save,
-  CalendarDays,
   LogOut,
   Lock,
   User,
@@ -118,7 +116,6 @@ const MONTHS_SHORT = [
 const NAV_LINKS = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'geschaefte', label: 'Stores', icon: Store },
-  { key: 'personal', label: 'Employees', icon: Users },
   { key: 'statistik', label: 'Statistics', icon: BarChart3 },
   { key: 'einstellungen', label: 'Settings', icon: Settings },
 ]
@@ -274,7 +271,6 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
           {NAV_LINKS.map(({ key, label, icon: Icon }) => {
             const isActive =
               activeView === key ||
-              (key === 'personal' && activeView === 'personal-detail') ||
               (key === 'geschaefte' && activeView === 'geschaeft-detail')
             return (
               <button
@@ -392,7 +388,7 @@ function KpiCard({ icon: Icon, label, value, hint, accent }) {
 /*  DASHBOARD VIEW                                                            */
 /* -------------------------------------------------------------------------- */
 
-function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeiter, onNeuesGeschaeft }) {
+function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onNeuesGeschaeft }) {
   const currentYear = new Date().getFullYear()
 
   // KPIs computed dynamically from the data
@@ -428,6 +424,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
   // Employees per store for the bar chart
   const mitarbeiterProGeschaeft = useMemo(() => {
     const daten = geschaefte.map((g) => ({
+      id: g.id,
       name: g.name,
       city: g.city,
       anzahl: mitarbeiter.filter((m) => m.storeId === g.id).length,
@@ -486,16 +483,20 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
               <h2 className="text-base font-bold text-white">
                 Employees per Store
               </h2>
-              <p className="text-sm text-slate-400">Distribution by branch</p>
+              <p className="text-sm text-slate-400">Click a store to view its employees</p>
             </div>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-3">
             {mitarbeiterProGeschaeft.daten.length === 0 && (
               <p className="text-sm text-slate-500">No stores created yet.</p>
             )}
             {mitarbeiterProGeschaeft.daten.map((d) => (
-              <div key={d.name}>
+              <button
+                key={d.id}
+                onClick={() => onStoreClick(d.id)}
+                className="w-full cursor-pointer rounded-2xl p-2 text-left transition-colors hover:bg-white/5"
+              >
                 <div className="mb-1.5 flex items-center justify-between text-sm">
                   <span className="font-medium text-slate-200">
                     {d.name}{' '}
@@ -511,7 +512,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
                     }}
                   />
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -523,17 +524,10 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
 
           <div className="mt-6 space-y-3">
             <button
-              onClick={onNeuerMitarbeiter}
+              onClick={onNeuesGeschaeft}
               className="flex w-full items-center gap-3 rounded-2xl bg-lime-400 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
             >
-              <UserPlus className="h-5 w-5" />
-              New Employee
-            </button>
-            <button
-              onClick={onNeuesGeschaeft}
-              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
-            >
-              <PlusCircle className="h-5 w-5 text-lime-400" />
+              <PlusCircle className="h-5 w-5" />
               New Store
             </button>
           </div>
@@ -541,268 +535,10 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onNeuerMitarbeite
           <div className="mt-6 rounded-2xl bg-white/5 p-4">
             <p className="text-sm font-medium text-slate-200">Tip</p>
             <p className="mt-1 text-xs text-slate-400">
-              You can edit and update employee data anytime in Employee
-              Management.
+              Click any store in "Employees per Store" to view, add, or
+              manage its staff.
             </p>
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*  EMPLOYEE MANAGEMENT VIEW                                                  */
-/* -------------------------------------------------------------------------- */
-
-function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen }) {
-  const [formularOffen, setFormularOffen] = useState(false)
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [position, setPosition] = useState('')
-  const [storeId, setStoreId] = useState(geschaefte[0]?.id ?? '')
-  const [salary, setSalary] = useState('')
-  const [hours, setHours] = useState('')
-
-  const handleAbbrechen = () => {
-    setFormularOffen(false)
-    setFirstName('')
-    setLastName('')
-    setPosition('')
-    setStoreId(geschaefte[0]?.id ?? '')
-    setSalary('')
-    setHours('')
-  }
-
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    if (!firstName.trim() || !lastName.trim() || !position.trim() || !storeId) return
-    onHinzufuegen({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      position: position.trim(),
-      storeId: Number(storeId),
-      salary: Number(salary) || 0,
-      hours: Number(hours) || 0,
-    })
-    handleAbbrechen()
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-white">Employee Management</h2>
-          <p className="text-sm text-slate-400">
-            {mitarbeiter.length} employees in total
-          </p>
-        </div>
-        <button
-          onClick={() => setFormularOffen((offen) => !offen)}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
-        >
-          <UserPlus className="h-4 w-4" />
-          New Employee
-        </button>
-      </div>
-
-      {/* Form: add new employee */}
-      {formularOffen && (
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20"
-        >
-          <h3 className="text-base font-bold text-white">Add New Employee</h3>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                First Name
-              </label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="e.g. Julia"
-                required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Last Name
-              </label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="e.g. Bauer"
-                required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Position
-              </label>
-              <input
-                type="text"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                placeholder="e.g. Sales Associate"
-                required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Store
-              </label>
-              <select
-                value={storeId}
-                onChange={(e) => setStoreId(e.target.value)}
-                required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              >
-                {geschaefte.length === 0 && <option value="">No store available</option>}
-                {geschaefte.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name} · {g.city}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Salary (€)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="10"
-                value={salary}
-                onChange={(e) => setSalary(e.target.value)}
-                placeholder="e.g. 2800"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Hours/Week
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={hours}
-                onChange={(e) => setHours(e.target.value)}
-                placeholder="e.g. 38"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              />
-            </div>
-          </div>
-          <div className="mt-5 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={handleAbbrechen}
-              className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={geschaefte.length === 0}
-              className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Save Employee
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/20">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-6 py-4 font-semibold">Name</th>
-                <th className="px-6 py-4 font-semibold">Position</th>
-                <th className="px-6 py-4 font-semibold">Store</th>
-                <th className="px-6 py-4 font-semibold">Salary</th>
-                <th className="px-6 py-4 font-semibold">Hours/Week</th>
-                <th className="px-6 py-4 text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {mitarbeiter.map((m) => (
-                <tr key={m.id} className="transition-colors hover:bg-white/10">
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => onView(m.id)}
-                      className="flex items-center gap-3 text-left"
-                      title="View details"
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-xs font-bold text-white">
-                        {m.firstName[0]}
-                        {m.lastName[0]}
-                      </div>
-                      <span className="font-medium text-white hover:text-lime-400 hover:underline">
-                        {m.firstName} {m.lastName}
-                      </span>
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 text-slate-300">{m.position}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-200">
-                      {getStoreName(m.storeId, geschaefte)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 font-medium text-white">
-                    {formatEuro(m.salary)}
-                  </td>
-                  <td className="px-6 py-4 text-slate-300">{m.hours} hrs</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => onView(m.id)}
-                        className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
-                        aria-label={`Enter monthly data for ${m.firstName} ${m.lastName}`}
-                        title="Enter monthly data"
-                      >
-                        <CalendarDays className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
-                        aria-label={`Edit ${m.firstName} ${m.lastName}`}
-                        title="Edit"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(m.id)}
-                        className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
-                        aria-label={`Delete ${m.firstName} ${m.lastName}`}
-                        title="Delete"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {mitarbeiter.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-12 text-center text-sm text-slate-500"
-                  >
-                    No employees yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
@@ -911,7 +647,15 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
 
 const GEHALT_SLOTS = 4
 
-function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern, onGehaltLoeschen, onZurueck }) {
+function MitarbeiterDetailView({
+  mitarbeiter,
+  geschaefte,
+  eintraege,
+  onSpeichern,
+  onGehaltLoeschen,
+  onZurueck,
+  backLabel = 'Back to Employee Management',
+}) {
   const heute = new Date()
   const [jahr, setJahr] = useState(heute.getFullYear())
   const [monat, setMonat] = useState(heute.getMonth())
@@ -990,7 +734,7 @@ function MitarbeiterDetailView({ mitarbeiter, geschaefte, eintraege, onSpeichern
           className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-lime-400"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Employee Management
+          {backLabel}
         </button>
 
         <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
@@ -1697,13 +1441,270 @@ function EinstellungenView() {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  STORE EMPLOYEES MODAL                                                     */
+/*  Opened from the Dashboard's "Employees per Store" list – shows only the   */
+/*  employees for the clicked store, with add/delete and per-employee        */
+/*  monthly salary entry, all inside a glass modal overlay.                  */
+/* -------------------------------------------------------------------------- */
+
+function StoreEmployeesModal({
+  store,
+  mitarbeiter,
+  monatsDaten,
+  onClose,
+  onHinzufuegen,
+  onDelete,
+  onMonatSpeichern,
+  onGehaltLoeschen,
+}) {
+  const [formularOffen, setFormularOffen] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [position, setPosition] = useState('')
+  const [salary, setSalary] = useState('')
+  const [hours, setHours] = useState('')
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
+
+  const storeEmployees = mitarbeiter.filter((m) => m.storeId === store.id)
+  const selectedEmployee = storeEmployees.find((m) => m.id === selectedEmployeeId)
+
+  // Close on Escape
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [onClose])
+
+  const resetForm = () => {
+    setFormularOffen(false)
+    setFirstName('')
+    setLastName('')
+    setPosition('')
+    setSalary('')
+    setHours('')
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    if (!firstName.trim() || !lastName.trim() || !position.trim()) return
+    onHinzufuegen({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      position: position.trim(),
+      storeId: store.id,
+      salary: Number(salary) || 0,
+      hours: Number(hours) || 0,
+    })
+    resetForm()
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[#1a1c23]/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {selectedEmployee ? (
+          <MitarbeiterDetailView
+            mitarbeiter={selectedEmployee}
+            geschaefte={[store]}
+            eintraege={monatsDaten[selectedEmployee.id] ?? []}
+            onSpeichern={onMonatSpeichern}
+            onGehaltLoeschen={onGehaltLoeschen}
+            onZurueck={() => setSelectedEmployeeId(null)}
+            backLabel={`Back to ${store.name}`}
+          />
+        ) : (
+          <>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-white">{store.name}</h2>
+                <p className="text-sm text-slate-400">
+                  {store.city} · {storeEmployees.length} employees
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  onClick={() => setFormularOffen((offen) => !offen)}
+                  className="flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add Employee
+                </button>
+                <button
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="rounded-2xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:bg-white/10"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {formularOffen && (
+              <form
+                onSubmit={handleSubmit}
+                className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-5"
+              >
+                <h3 className="text-sm font-bold text-white">Add New Employee</h3>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-200">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="e.g. Julia"
+                      required
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-200">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="e.g. Bauer"
+                      required
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-200">
+                      Position
+                    </label>
+                    <input
+                      type="text"
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                      placeholder="e.g. Sales Associate"
+                      required
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-200">
+                      Salary (€)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="10"
+                      value={salary}
+                      onChange={(e) => setSalary(e.target.value)}
+                      placeholder="e.g. 2800"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-200">
+                      Hours/Week
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={hours}
+                      onChange={(e) => setHours(e.target.value)}
+                      placeholder="e.g. 38"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+                    />
+                  </div>
+                </div>
+                <div className="mt-5 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
+                  >
+                    Save Employee
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="mt-5 divide-y divide-white/5">
+              {storeEmployees.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedEmployeeId(m.id)}
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl px-2 py-3 text-left transition-colors hover:bg-white/5"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-xs font-bold text-white">
+                      {m.firstName[0]}
+                      {m.lastName[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-white">
+                        {m.firstName} {m.lastName}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">{m.position}</p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="text-sm font-semibold text-white">
+                      {formatEuro(m.salary)}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onDelete(m.id)
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.stopPropagation()
+                          onDelete(m.id)
+                        }
+                      }}
+                      aria-label={`Delete ${m.firstName} ${m.lastName}`}
+                      title="Delete"
+                      className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </span>
+                  </div>
+                </button>
+              ))}
+
+              {storeEmployees.length === 0 && (
+                <p className="rounded-xl bg-white/5 px-4 py-8 text-center text-sm text-slate-500">
+                  No employees at this store yet.
+                </p>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  MAIN COMPONENT                                                            */
 /* -------------------------------------------------------------------------- */
 
 const VIEW_TITEL = {
   dashboard: 'Dashboard',
   geschaefte: 'Stores',
-  personal: 'Employee Management',
   statistik: 'Statistics',
   einstellungen: 'Settings',
 }
@@ -1714,8 +1715,8 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mitarbeiter, setMitarbeiter] = useState(EMPLOYEES)
   const [geschaefte, setGeschaefte] = useState(STORES)
-  const [selectedMitarbeiterId, setSelectedMitarbeiterId] = useState(null)
   const [selectedGeschaeftId, setSelectedGeschaeftId] = useState(null)
+  const [selectedStoreId, setSelectedStoreId] = useState(null)
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
@@ -1787,11 +1788,6 @@ export default function App() {
     }))
   }
 
-  const handleMitarbeiterAnsehen = (id) => {
-    setSelectedMitarbeiterId(id)
-    setActiveView('personal-detail')
-  }
-
   // Save a monthly entry (up to four salary payments + hours worked) for
   // an employee, or update it if one already exists for that month/year
   const handleMonatSpeichern = (mitarbeiterId, jahr, monat, gehaelter, stunden) => {
@@ -1821,8 +1817,8 @@ export default function App() {
     }))
   }
 
-  const selectedMitarbeiter = mitarbeiter.find((m) => m.id === selectedMitarbeiterId)
   const selectedGeschaeft = geschaefte.find((g) => g.id === selectedGeschaeftId)
+  const selectedStore = geschaefte.find((g) => g.id === selectedStoreId)
 
   const renderView = () => {
     switch (activeView) {
@@ -1832,7 +1828,7 @@ export default function App() {
             geschaefte={geschaefte}
             mitarbeiter={mitarbeiter}
             monatsDaten={monatsDaten}
-            onNeuerMitarbeiter={() => setActiveView('personal')}
+            onStoreClick={(id) => setSelectedStoreId(id)}
             onNeuesGeschaeft={() => setActiveView('geschaefte')}
           />
         )
@@ -1863,31 +1859,6 @@ export default function App() {
             onZurueck={() => setActiveView('geschaefte')}
           />
         )
-      case 'personal':
-        return (
-          <PersonalView
-            mitarbeiter={mitarbeiter}
-            geschaefte={geschaefte}
-            onDelete={handleDelete}
-            onView={handleMitarbeiterAnsehen}
-            onHinzufuegen={handleMitarbeiterHinzufuegen}
-          />
-        )
-      case 'personal-detail':
-        if (!selectedMitarbeiter) {
-          setActiveView('personal')
-          return null
-        }
-        return (
-          <MitarbeiterDetailView
-            mitarbeiter={selectedMitarbeiter}
-            geschaefte={geschaefte}
-            eintraege={monatsDaten[selectedMitarbeiter.id] ?? []}
-            onSpeichern={handleMonatSpeichern}
-            onGehaltLoeschen={handleGehaltLoeschen}
-            onZurueck={() => setActiveView('personal')}
-          />
-        )
       case 'statistik':
         return (
           <StatistikView
@@ -1903,11 +1874,9 @@ export default function App() {
   }
 
   const headerTitel =
-    activeView === 'personal-detail' && selectedMitarbeiter
-      ? `${selectedMitarbeiter.firstName} ${selectedMitarbeiter.lastName}`
-      : activeView === 'geschaeft-detail' && selectedGeschaeft
-        ? selectedGeschaeft.name
-        : VIEW_TITEL[activeView]
+    activeView === 'geschaeft-detail' && selectedGeschaeft
+      ? selectedGeschaeft.name
+      : VIEW_TITEL[activeView]
 
   return (
     <div className="relative flex h-screen items-stretch gap-4 overflow-hidden bg-slate-950 p-4">
@@ -1935,6 +1904,19 @@ export default function App() {
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">{renderView()}</main>
       </div>
+
+      {selectedStore && (
+        <StoreEmployeesModal
+          store={selectedStore}
+          mitarbeiter={mitarbeiter}
+          monatsDaten={monatsDaten}
+          onClose={() => setSelectedStoreId(null)}
+          onHinzufuegen={handleMitarbeiterHinzufuegen}
+          onDelete={handleDelete}
+          onMonatSpeichern={handleMonatSpeichern}
+          onGehaltLoeschen={handleGehaltLoeschen}
+        />
+      )}
     </div>
   )
 }

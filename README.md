@@ -1,7 +1,8 @@
 # BEM Dashboard – Business Management (MVP)
 
 A responsive business management dashboard for overseeing multiple stores
-and employees. The entire user interface is in **English**.
+and employees, styled as a dark glassmorphism UI with a neon-lime accent.
+The entire user interface is in **English**.
 
 Built with **React**, **Tailwind CSS** and **lucide-react**.
 
@@ -13,17 +14,17 @@ Built with **React**, **Tailwind CSS** and **lucide-react**.
   - Total Employees
   - Staff Costs for the current year
   - Most Expensive employee
-  - CSS bar chart "Employees per Store"
-  - Quick actions: "New Employee", "New Store"
+  - "Employees per Store" bar list – click any store to open a modal with
+    that store's employees (add/delete, and a per-employee detail view to
+    record up to four salary payments and hours worked per month, plus a
+    salary history chart)
+  - Quick action: "New Store"
 - **Stores** – overview cards for every branch, add/delete stores, and a
   per-store revenue entry view (month/year picker + history)
-- **Employee Management** – data table with hover effects, add/delete
-  employees, and a per-employee detail view where you can record up to four
-  salary payments and hours worked per month, plus a salary history chart
 - **Statistics** – yearly/monthly revenue overview with a year picker
 - **Settings** – form for the company profile
-- **Layout** – dark, mobile-collapsible sidebar + light header with search
-  bar, current date, and a profile placeholder
+- **Layout** – floating icon-only navigation rail + a bordered glass panel
+  containing the header (search bar, current date, profile) and page content
 
 ## Project Structure
 
