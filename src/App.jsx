@@ -23,6 +23,7 @@ import {
   BarChart3,
   TrendingUp,
 } from 'lucide-react'
+import GERMANY_MAP from './germanyMapData.json'
 
 /* -------------------------------------------------------------------------- */
 /*  MOCK DATABASE                                                             */
@@ -141,6 +142,74 @@ const NAV_LINKS = [
 ]
 
 /* -------------------------------------------------------------------------- */
+/*  BACKGROUND MAP                                                            */
+/*  Interactive Germany map used as the app-wide background. When            */
+/*  selectedState is set, the map zooms in on that Bundesland and fades      */
+/*  out every other boundary.                                                */
+/* -------------------------------------------------------------------------- */
+
+function GermanyMap({ selectedState }) {
+  const { viewBox, countryPath, states } = GERMANY_MAP
+  const [, , vw, vh] = viewBox
+  const selected = states.find((s) => s.name === selectedState)
+
+  let k = 1
+  let tx = 0
+  let ty = 0
+  if (selected) {
+    const [x0, y0, x1, y1] = selected.bbox
+    const bw = x1 - x0
+    const bh = y1 - y0
+    const cx = (x0 + x1) / 2
+    const cy = (y0 + y1) / 2
+    const targetW = vw * 0.55
+    const targetH = vh * 0.55
+    k = Math.min(targetW / bw, targetH / bh, 6)
+    tx = vw / 2 - k * cx
+    ty = vh / 2 - k * cy
+  }
+
+  return (
+    <svg viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="h-full w-full">
+      <g
+        style={{
+          transform: `translate(${tx}px, ${ty}px) scale(${k})`,
+          transformOrigin: '0 0',
+          transition: 'transform 900ms cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
+      >
+        <path
+          d={countryPath}
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth={1.6 / k}
+          strokeLinejoin="round"
+          style={{ opacity: selected ? 0 : 0.85, transition: 'opacity 700ms ease' }}
+        />
+        {states.map((s) => {
+          const isSelected = selected && s.name === selected.name
+          return (
+            <path
+              key={s.name}
+              d={s.path}
+              fillRule="evenodd"
+              fill={isSelected ? 'rgba(163,230,53,0.07)' : 'transparent'}
+              stroke="#ffffff"
+              strokeWidth={(isSelected ? 1.8 : 1.1) / k}
+              strokeLinejoin="round"
+              style={{
+                opacity: !selected || isSelected ? 0.85 : 0,
+                transition: 'opacity 700ms ease, fill 700ms ease',
+              }}
+            />
+          )
+        })}
+      </g>
+    </svg>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  LOGIN CREDENTIALS (demo)                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -174,12 +243,12 @@ function LoginView({ onLogin }) {
   return (
     <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4">
       <div className="pointer-events-none absolute inset-0 z-[-1] overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-purple-900/30 blur-[140px]" />
-        <div className="absolute -bottom-32 -right-32 h-[32rem] w-[32rem] rounded-full bg-blue-800/20 blur-[140px]" />
-        <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime-500/10 blur-[120px]" />
+        <div className="h-full w-full scale-110">
+          <GermanyMap selectedState={null} />
+        </div>
       </div>
 
-      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl">
+      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-[#0a0b10]/80 p-8 shadow-2xl shadow-black/40">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400 text-white shadow-lg shadow-lime-400/30">
             <Building2 className="h-7 w-7" />
@@ -389,7 +458,7 @@ function Header({ title, onMenuClick, onLogout }) {
 
 function KpiCard({ icon: Icon, label, value, hint, accent }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl">
+    <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-slate-400">{label}</p>
@@ -497,7 +566,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Chart: employees per store */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20 lg:col-span-2">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 lg:col-span-2">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-white">
@@ -538,7 +607,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
         </div>
 
         {/* Quick actions */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
           <h2 className="text-base font-bold text-white">Quick Actions</h2>
           <p className="text-sm text-slate-400">Frequently used functions</p>
 
@@ -552,14 +621,14 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onStoreClick, onQ
             </button>
             <button
               onClick={() => onQuickAction('employee')}
-              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
               <UserPlus className="h-5 w-5 text-lime-400" />
               New Employee
             </button>
             <button
               onClick={() => onQuickAction('salary')}
-              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
               <Wallet className="h-5 w-5 text-lime-400" />
               Update Salary
@@ -611,7 +680,7 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
   )
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+    <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
       <h3 className="text-base font-bold text-white">Salary History {jahr}</h3>
       <p className="text-sm text-slate-400">
         Monthly salary for {mitarbeiter.firstName} {mitarbeiter.lastName}
@@ -771,7 +840,7 @@ function MitarbeiterDetailView({
           {backLabel}
         </button>
 
-        <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-lg font-bold text-white">
             {mitarbeiter.firstName[0]}
             {mitarbeiter.lastName[0]}
@@ -799,7 +868,7 @@ function MitarbeiterDetailView({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Form: enter monthly data */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
           <h3 className="text-base font-bold text-white">Enter Monthly Data</h3>
           <p className="text-sm text-slate-400">
             Select a calendar month and year to enter salary and hours worked.
@@ -895,7 +964,7 @@ function MitarbeiterDetailView({
         </div>
 
         {/* Recorded monthly data: salaries for the selected month/year */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
           <h3 className="text-base font-bold text-white">Recorded Monthly Data</h3>
           <p className="text-sm text-slate-400">
             Salaries for {MONTHS[monat]} {jahr}
@@ -988,7 +1057,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
       {formularOffen && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20"
+          className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20"
         >
           <h3 className="text-base font-bold text-white">Add New Store</h3>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1060,7 +1129,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
           return (
             <div
               key={g.id}
-              className="group rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl"
+              className="group rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -1107,7 +1176,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
         })}
 
         {geschaefte.length === 0 && (
-          <p className="col-span-full rounded-3xl border border-dashed border-white/10 bg-white/5 backdrop-blur-xl px-6 py-12 text-center text-sm text-slate-500">
+          <p className="col-span-full rounded-3xl border border-dashed border-white/10 bg-white/[0.06] px-6 py-12 text-center text-sm text-slate-500">
             No stores yet. Use "New Store" to create your first one.
           </p>
         )}
@@ -1177,7 +1246,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
           Back to Stores
         </button>
 
-        <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400/10 text-lime-400">
             <Store className="h-7 w-7" />
           </div>
@@ -1196,7 +1265,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Form: enter revenue */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
           <h3 className="text-base font-bold text-white">Enter Revenue</h3>
           <p className="text-sm text-slate-400">
             Select a calendar month and year to enter revenue.
@@ -1272,7 +1341,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
         </div>
 
         {/* Recorded revenue history */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
           <h3 className="text-base font-bold text-white">Recorded Revenue</h3>
           <p className="text-sm text-slate-400">History for {geschaeft.name}</p>
 
@@ -1392,7 +1461,7 @@ function StatistikView({ geschaefte, umsatzDaten }) {
       </div>
 
       {/* Monthly overview */}
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl shadow-black/20">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left text-sm">
             <thead>
@@ -1440,7 +1509,7 @@ function EinstellungenView() {
         <p className="text-sm text-slate-400">Manage your account and system settings</p>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl shadow-black/20">
+      <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
         <h3 className="text-base font-bold text-white">Company Profile</h3>
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
@@ -2181,6 +2250,13 @@ export default function App() {
   const selectedGeschaeft = geschaefte.find((g) => g.id === selectedGeschaeftId)
   const selectedStore = geschaefte.find((g) => g.id === selectedStoreId)
 
+  // Which Bundesland the background map should zoom into: the store whose
+  // employee modal is open, or the store whose revenue detail page is open.
+  const mapSelectedState =
+    selectedStore?.state ??
+    (activeView === 'geschaeft-detail' ? selectedGeschaeft?.state : null) ??
+    null
+
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
@@ -2242,9 +2318,9 @@ export default function App() {
   return (
     <div className="relative isolate flex h-screen items-stretch gap-4 overflow-hidden bg-slate-950 p-4">
       <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-purple-900/30 blur-[140px]" />
-        <div className="absolute -bottom-32 -right-32 h-[32rem] w-[32rem] rounded-full bg-blue-800/20 blur-[140px]" />
-        <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime-500/10 blur-[120px]" />
+        <div className="h-full w-full scale-110">
+          <GermanyMap selectedState={mapSelectedState} />
+        </div>
       </div>
 
       <div className="relative z-10">
@@ -2256,7 +2332,7 @@ export default function App() {
         />
       </div>
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-black/40 backdrop-blur-xl">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/40">
         <Header
           title={headerTitel}
           onMenuClick={() => setMobileOpen(true)}
