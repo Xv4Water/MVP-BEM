@@ -172,11 +172,11 @@ function LoginView({ onLogin }) {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-lime-500/20 blur-3xl" />
-        <div className="absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-lime-400/10 blur-3xl" />
+    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4">
+      <div className="pointer-events-none absolute inset-0 z-[-1] overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-purple-900/30 blur-[140px]" />
+        <div className="absolute -bottom-32 -right-32 h-[32rem] w-[32rem] rounded-full bg-blue-800/20 blur-[140px]" />
+        <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime-500/10 blur-[120px]" />
       </div>
 
       <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl">
@@ -2240,11 +2240,11 @@ export default function App() {
       : VIEW_TITEL[activeView]
 
   return (
-    <div className="relative flex h-screen items-stretch gap-4 overflow-hidden bg-slate-950 p-4">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-lime-500/20 blur-3xl" />
-        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-lime-400/10 blur-3xl" />
+    <div className="relative isolate flex h-screen items-stretch gap-4 overflow-hidden bg-slate-950 p-4">
+      <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-purple-900/30 blur-[140px]" />
+        <div className="absolute -bottom-32 -right-32 h-[32rem] w-[32rem] rounded-full bg-blue-800/20 blur-[140px]" />
+        <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime-500/10 blur-[120px]" />
       </div>
 
       <div className="relative z-10">
