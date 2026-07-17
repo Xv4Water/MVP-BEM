@@ -148,7 +148,7 @@ const NAV_LINKS = [
 /*  out every other boundary.                                                */
 /* -------------------------------------------------------------------------- */
 
-function GermanyMap({ selectedState }) {
+function GermanyMap({ selectedState, glow = false }) {
   const { viewBox, countryPath, states } = GERMANY_MAP
   const [, , vw, vh] = viewBox
   const selected = states.find((s) => s.name === selectedState)
@@ -169,20 +169,39 @@ function GermanyMap({ selectedState }) {
     ty = vh / 2 - k * cy
   }
 
+  const strokeColor = glow ? '#a3e635' : '#ffffff'
+  const baseStrokeWidth = glow ? 1.9 : 1.6
+  const stateStrokeWidth = glow ? 1.4 : 1.1
+  const selectedStrokeWidth = glow ? 2.4 : 1.8
+  const selectedFill = glow ? 'rgba(163,230,53,0.14)' : 'rgba(163,230,53,0.07)'
+
   return (
     <svg viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="h-full w-full">
+      {glow && (
+        <defs>
+          <filter id="germanyMapGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      )}
       <g
         style={{
           transform: `translate(${tx}px, ${ty}px) scale(${k})`,
           transformOrigin: '0 0',
           transition: 'transform 900ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
+        filter={glow ? 'url(#germanyMapGlow)' : undefined}
       >
         <path
           d={countryPath}
           fill="none"
-          stroke="#ffffff"
-          strokeWidth={1.6 / k}
+          stroke={strokeColor}
+          strokeWidth={baseStrokeWidth / k}
           strokeLinejoin="round"
           style={{ opacity: selected ? 0 : 0.85, transition: 'opacity 700ms ease' }}
         />
@@ -193,9 +212,9 @@ function GermanyMap({ selectedState }) {
               key={s.name}
               d={s.path}
               fillRule="evenodd"
-              fill={isSelected ? 'rgba(163,230,53,0.07)' : 'transparent'}
-              stroke="#ffffff"
-              strokeWidth={(isSelected ? 1.8 : 1.1) / k}
+              fill={isSelected ? selectedFill : 'transparent'}
+              stroke={strokeColor}
+              strokeWidth={(isSelected ? selectedStrokeWidth : stateStrokeWidth) / k}
               strokeLinejoin="round"
               style={{
                 opacity: !selected || isSelected ? 0.85 : 0,
@@ -2127,6 +2146,55 @@ function UpdateSalaryModal({ mitarbeiter, geschaefte, monatsDaten, onClose, onMo
 }
 
 /* -------------------------------------------------------------------------- */
+/*  POWER-UP TRANSITION                                                       */
+/*  Plays once right after a successful login: a green energy burst that     */
+/*  hands off into the app's neon-glow map.                                  */
+/* -------------------------------------------------------------------------- */
+
+function PowerUpBurst() {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[70] overflow-hidden">
+      <style>{`
+        @keyframes powerUpFlash {
+          0% { opacity: 0; }
+          10% { opacity: 0.9; }
+          100% { opacity: 0; }
+        }
+        @keyframes powerUpBurst {
+          0% { transform: translate(-50%, -50%) scale(0.15); opacity: 0.95; }
+          55% { opacity: 0.55; }
+          100% { transform: translate(-50%, -50%) scale(3.4); opacity: 0; }
+        }
+        @keyframes powerUpBurstSlow {
+          0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0.8; }
+          100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+        }
+      `}</style>
+      <div
+        className="absolute inset-0 bg-white"
+        style={{ animation: 'powerUpFlash 850ms ease-out forwards' }}
+      />
+      <div
+        className="absolute left-1/2 top-1/2 h-[70vmax] w-[70vmax] rounded-full blur-2xl"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(163,230,53,0.55) 0%, rgba(163,230,53,0.25) 40%, rgba(163,230,53,0) 70%)',
+          animation: 'powerUpBurstSlow 1200ms 80ms cubic-bezier(0.15,0.8,0.3,1) forwards',
+        }}
+      />
+      <div
+        className="absolute left-1/2 top-1/2 h-[38vmax] w-[38vmax] rounded-full"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(190,242,100,0.95) 0%, rgba(163,230,53,0.6) 45%, rgba(163,230,53,0) 72%)',
+          animation: 'powerUpBurst 1000ms cubic-bezier(0.15,0.8,0.3,1) forwards',
+        }}
+      />
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  MAIN COMPONENT                                                            */
 /* -------------------------------------------------------------------------- */
 
@@ -2139,6 +2207,7 @@ const VIEW_TITEL = {
 
 export default function App() {
   const [istAngemeldet, setIstAngemeldet] = useState(false)
+  const [poweringUp, setPoweringUp] = useState(false)
   const [activeView, setActiveView] = useState('dashboard')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mitarbeiter, setMitarbeiter] = useState(EMPLOYEES)
@@ -2159,8 +2228,21 @@ export default function App() {
     setActiveView('dashboard')
   }
 
+  // Power-up transition into the app after a successful login: a brief
+  // green energy-burst flash, then the map settles into its neon glow.
+  const handleAnmelden = () => {
+    setIstAngemeldet(true)
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (!prefersReducedMotion) {
+      setPoweringUp(true)
+      setTimeout(() => setPoweringUp(false), 1200)
+    }
+  }
+
   if (!istAngemeldet) {
-    return <LoginView onLogin={() => setIstAngemeldet(true)} />
+    return <LoginView onLogin={handleAnmelden} />
   }
 
   // Remove an employee from state
@@ -2319,9 +2401,11 @@ export default function App() {
     <div className="relative isolate flex h-screen items-stretch gap-4 overflow-hidden bg-slate-950 p-4">
       <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
         <div className="h-full w-full scale-110">
-          <GermanyMap selectedState={mapSelectedState} />
+          <GermanyMap selectedState={mapSelectedState} glow />
         </div>
       </div>
+
+      {poweringUp && <PowerUpBurst />}
 
       <div className="relative z-10">
         <Sidebar
