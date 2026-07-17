@@ -30,10 +30,30 @@ import {
 /* -------------------------------------------------------------------------- */
 
 const STORES = [
-  { id: 1, name: 'Central Branch', city: 'Berlin' },
-  { id: 2, name: 'Old Town Branch', city: 'Munich' },
-  { id: 3, name: 'Harbour City Branch', city: 'Hamburg' },
-  { id: 4, name: 'Downtown Branch', city: 'Cologne' },
+  { id: 1, name: 'Central Branch', city: 'Berlin', state: 'Berlin' },
+  { id: 2, name: 'Old Town Branch', city: 'Munich', state: 'Bavaria' },
+  { id: 3, name: 'Harbour City Branch', city: 'Hamburg', state: 'Hamburg' },
+  { id: 4, name: 'Downtown Branch', city: 'Cologne', state: 'North Rhine-Westphalia' },
+]
+
+// The 16 German federal states (Bundesländer)
+const GERMAN_STATES = [
+  'Baden-Württemberg',
+  'Bavaria',
+  'Berlin',
+  'Brandenburg',
+  'Bremen',
+  'Hamburg',
+  'Hesse',
+  'Lower Saxony',
+  'Mecklenburg-Vorpommern',
+  'North Rhine-Westphalia',
+  'Rhineland-Palatinate',
+  'Saarland',
+  'Saxony',
+  'Saxony-Anhalt',
+  'Schleswig-Holstein',
+  'Thuringia',
 ]
 
 const EMPLOYEES = [
@@ -932,17 +952,19 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
   const [formularOffen, setFormularOffen] = useState(false)
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
+  const [bundesland, setBundesland] = useState(GERMAN_STATES[0])
 
   const handleAbbrechen = () => {
     setFormularOffen(false)
     setName('')
     setStadt('')
+    setBundesland(GERMAN_STATES[0])
   }
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (!name.trim() || !stadt.trim()) return
-    onHinzufuegen(name.trim(), stadt.trim())
+    if (!name.trim() || !stadt.trim() || !bundesland) return
+    onHinzufuegen(name.trim(), stadt.trim(), bundesland)
     handleAbbrechen()
   }
 
@@ -996,6 +1018,23 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-200">
+                State
+              </label>
+              <select
+                value={bundesland}
+                onChange={(e) => setBundesland(e.target.value)}
+                required
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+              >
+                {GERMAN_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="mt-5 flex justify-end gap-3">
             <button
@@ -1030,7 +1069,9 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                   </div>
                   <div>
                     <p className="font-bold text-white">{g.name}</p>
-                    <p className="text-sm text-slate-400">{g.city}</p>
+                    <p className="text-sm text-slate-400">
+                      {g.city} · {g.state}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1142,7 +1183,9 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
           </div>
           <div className="mr-auto">
             <h2 className="text-lg font-bold text-white">{geschaeft.name}</h2>
-            <p className="text-sm text-slate-400">{geschaeft.city}</p>
+            <p className="text-sm text-slate-400">
+              {geschaeft.city} · {geschaeft.state}
+            </p>
           </div>
           <div className="text-sm">
             <p className="text-slate-500">Employees</p>
@@ -1548,7 +1591,7 @@ function StoreEmployeesModal({
               <div>
                 <h2 className="text-lg font-bold text-white">{store.name}</h2>
                 <p className="text-sm text-slate-400">
-                  {store.city} · {storeEmployees.length} employees
+                  {store.city}, {store.state} · {storeEmployees.length} employees
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -1727,11 +1770,12 @@ function StoreEmployeesModal({
 function NewStoreModal({ onClose, onHinzufuegen }) {
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
+  const [bundesland, setBundesland] = useState(GERMAN_STATES[0])
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (!name.trim() || !stadt.trim()) return
-    onHinzufuegen(name.trim(), stadt.trim())
+    if (!name.trim() || !stadt.trim() || !bundesland) return
+    onHinzufuegen(name.trim(), stadt.trim(), bundesland)
     onClose()
   }
 
@@ -1770,6 +1814,21 @@ function NewStoreModal({ onClose, onHinzufuegen }) {
             required
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
           />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-200">State</label>
+          <select
+            value={bundesland}
+            onChange={(e) => setBundesland(e.target.value)}
+            required
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
+          >
+            {GERMAN_STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex justify-end gap-3 pt-1">
           <button
@@ -2049,10 +2108,10 @@ export default function App() {
   }
 
   // Add a new store
-  const handleGeschaeftHinzufuegen = (name, city) => {
+  const handleGeschaeftHinzufuegen = (name, city, state) => {
     setGeschaefte((prev) => {
       const neueId = Math.max(0, ...prev.map((g) => g.id)) + 1
-      return [...prev, { id: neueId, name, city }]
+      return [...prev, { id: neueId, name, city, state }]
     })
   }
 
