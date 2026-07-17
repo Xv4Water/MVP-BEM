@@ -518,7 +518,39 @@ function DashboardView({ geschaefte, mitarbeiter, onNeuerMitarbeiter, onNeuesGes
 /*  PERSONALVERWALTUNG-ANSICHT                                                */
 /* -------------------------------------------------------------------------- */
 
-function PersonalView({ mitarbeiter, geschaefte, onDelete, onView }) {
+function PersonalView({ mitarbeiter, geschaefte, onDelete, onView, onHinzufuegen }) {
+  const [formularOffen, setFormularOffen] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [position, setPosition] = useState('')
+  const [storeId, setStoreId] = useState(geschaefte[0]?.id ?? '')
+  const [salary, setSalary] = useState('')
+  const [hours, setHours] = useState('')
+
+  const handleAbbrechen = () => {
+    setFormularOffen(false)
+    setFirstName('')
+    setLastName('')
+    setPosition('')
+    setStoreId(geschaefte[0]?.id ?? '')
+    setSalary('')
+    setHours('')
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    if (!firstName.trim() || !lastName.trim() || !position.trim() || !storeId) return
+    onHinzufuegen({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      position: position.trim(),
+      storeId: Number(storeId),
+      salary: Number(salary) || 0,
+      hours: Number(hours) || 0,
+    })
+    handleAbbrechen()
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -528,11 +560,127 @@ function PersonalView({ mitarbeiter, geschaefte, onDelete, onView }) {
             {mitarbeiter.length} Mitarbeiter insgesamt
           </p>
         </div>
-        <button className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700">
+        <button
+          onClick={() => setFormularOffen((offen) => !offen)}
+          className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700"
+        >
           <UserPlus className="h-4 w-4" />
           Neuer Mitarbeiter
         </button>
       </div>
+
+      {/* Formular: Neuen Mitarbeiter anlegen */}
+      {formularOffen && (
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <h3 className="text-base font-bold text-slate-900">Neuen Mitarbeiter anlegen</h3>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Vorname
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="z. B. Julia"
+                required
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Nachname
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="z. B. Bauer"
+                required
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Position
+              </label>
+              <input
+                type="text"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                placeholder="z. B. Verkäuferin"
+                required
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Geschäft
+              </label>
+              <select
+                value={storeId}
+                onChange={(e) => setStoreId(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              >
+                {geschaefte.length === 0 && <option value="">Kein Geschäft vorhanden</option>}
+                {geschaefte.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} · {g.city}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Gehalt (€)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="10"
+                value={salary}
+                onChange={(e) => setSalary(e.target.value)}
+                placeholder="z. B. 2800"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Stunden/Woche
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={hours}
+                onChange={(e) => setHours(e.target.value)}
+                placeholder="z. B. 38"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+          </div>
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleAbbrechen}
+              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              disabled={geschaefte.length === 0}
+              className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Mitarbeiter speichern
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* Tabelle */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -1474,6 +1622,14 @@ export default function App() {
     setMitarbeiter((prev) => prev.filter((m) => m.id !== id))
   }
 
+  // Neuen Mitarbeiter anlegen
+  const handleMitarbeiterHinzufuegen = (daten) => {
+    setMitarbeiter((prev) => {
+      const neueId = Math.max(0, ...prev.map((m) => m.id)) + 1
+      return [...prev, { id: neueId, ...daten }]
+    })
+  }
+
   // Neues Geschäft anlegen
   const handleGeschaeftHinzufuegen = (name, city) => {
     setGeschaefte((prev) => {
@@ -1593,6 +1749,7 @@ export default function App() {
             geschaefte={geschaefte}
             onDelete={handleDelete}
             onView={handleMitarbeiterAnsehen}
+            onHinzufuegen={handleMitarbeiterHinzufuegen}
           />
         )
       case 'personal-detail':
