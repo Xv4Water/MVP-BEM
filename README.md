@@ -26,22 +26,17 @@ Built with **React**, **Tailwind CSS** and **lucide-react**.
 - **Settings** – form for the company profile
 - **Layout** – floating icon-only navigation rail + a bordered glass panel
   containing the header (search bar, current date, profile) and page content
-- **Background** – an interactive, pure-SVG map of Germany (national
-  outline + all 16 Bundesländer) rendered behind the whole app. Whenever a
-  specific store's employees view is open, the map smoothly zooms in and
-  isolates that store's Bundesland; it resets to the full national view
-  when you navigate away. Boundary data comes from
-  [isellsoap/deutschlandGeoJSON](https://github.com/isellsoap/deutschlandGeoJSON)
-  (MIT-licensed), pre-processed into `src/germanyMapData.json`.
+- **Background** – a plain dark backdrop across the whole app, including
+  the login screen. A one-time "power-up" transition (white flash + an
+  expanding lime-green energy burst) plays right after a successful login.
 
 ## Project Structure
 
 ```
 src/
-  App.jsx              # Complete single-file application (mock data, views, layout)
-  germanyMapData.json  # Pre-projected SVG path data for the background map
-  main.jsx             # React entry point
-  index.css            # Tailwind directives
+  App.jsx    # Complete single-file application (mock data, views, layout)
+  main.jsx   # React entry point
+  index.css  # Tailwind directives
 ```
 
 The entire application logic lives in `src/App.jsx`.
