@@ -85,15 +85,19 @@ const formatEuro = (amount) =>
     maximumFractionDigits: 0,
   }).format(amount)
 
-// Format currency in compact "k" form (e.g. €110k) for the annual cost chart
-const formatEuroK = (amount) => `€${Math.round(amount / 1000)}k`
-
-// Mock annual cost figures per store, used for the Dashboard's illustrative
-// "Annual Store Costs" chart. Falls back to a deterministic estimate for any
-// store beyond the four seeded ones.
+// Mock annual cost figures per store, used by the Branch Locations modal.
+// Falls back to a deterministic estimate for any store beyond the four
+// seeded ones.
 const MOCK_ANNUAL_COSTS = { 1: 110000, 2: 105000, 3: 105000, 4: 110000 }
 const getMockAnnualCost = (storeId) =>
   MOCK_ANNUAL_COSTS[storeId] ?? 100000 + ((storeId * 5000) % 30000)
+
+// Mock year-to-date payroll figures per store, used for the Dashboard's
+// "YTD Payroll by Store" chart. Falls back to a deterministic estimate for
+// any store beyond the four seeded ones.
+const MOCK_YTD_PAYROLL = { 1: 108500, 2: 94200, 3: 121300, 4: 87600 }
+const getMockYtdPayroll = (storeId) =>
+  MOCK_YTD_PAYROLL[storeId] ?? 90000 + ((storeId * 4300) % 35000)
 
 // Map a storeId to its store
 const getStoreName = (storeId, storeList) =>
@@ -544,17 +548,17 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
     return { aktiveGeschaefte, gesamtMitarbeiter, personalkosten, teuersterMitarbeiter }
   }, [geschaefte, mitarbeiter, monatsDaten, currentYear])
 
-  // Annual costs per store for the bar chart (illustrative mock figures)
-  const jaehrlicheKostenProGeschaeft = useMemo(
+  // YTD payroll per store for the bar chart (illustrative mock figures)
+  const ytdPayrollProGeschaeft = useMemo(
     () =>
       geschaefte.map((g) => ({
         id: g.id,
         name: g.name,
-        kosten: getMockAnnualCost(g.id),
+        betrag: getMockYtdPayroll(g.id),
       })),
     [geschaefte],
   )
-  const KOSTEN_ACHSE_MAX = 150000
+  const PAYROLL_ACHSE_MAX = 150000
 
   return (
     <div className="space-y-6">
@@ -601,32 +605,32 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Chart: annual costs per store */}
+        {/* Chart: YTD payroll per store */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 lg:col-span-2">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-white">
-                Annual Store Costs {currentYear}
+                YTD Payroll by Store
               </h2>
-              <p className="text-sm text-slate-400">Annual costs and revenue by branch</p>
+              <p className="text-sm text-slate-400">Total wages paid this year, by branch</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            {jaehrlicheKostenProGeschaeft.length === 0 && (
+            {ytdPayrollProGeschaeft.length === 0 && (
               <p className="text-sm text-slate-500">No stores created yet.</p>
             )}
-            {jaehrlicheKostenProGeschaeft.map((d) => (
+            {ytdPayrollProGeschaeft.map((d) => (
               <div key={d.id} className="rounded-2xl p-2">
                 <div className="mb-1.5 flex items-center justify-between text-sm">
                   <span className="font-medium text-slate-200">{d.name}</span>
-                  <span className="font-semibold text-white">{formatEuroK(d.kosten)}</span>
+                  <span className="font-semibold text-white">{formatEuro(d.betrag)}</span>
                 </div>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 transition-all duration-500"
                     style={{
-                      width: `${Math.min((d.kosten / KOSTEN_ACHSE_MAX) * 100, 100)}%`,
+                      width: `${Math.min((d.betrag / PAYROLL_ACHSE_MAX) * 100, 100)}%`,
                     }}
                   />
                 </div>
@@ -634,7 +638,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
             ))}
           </div>
 
-          {jaehrlicheKostenProGeschaeft.length > 0 && (
+          {ytdPayrollProGeschaeft.length > 0 && (
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
               <span>€0k</span>
               <span>€50k</span>
