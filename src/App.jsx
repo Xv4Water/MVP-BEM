@@ -1150,6 +1150,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
   const [bundesland, setBundesland] = useState(GERMAN_STATES[0])
+  const [pendingDelete, setPendingDelete] = useState(null)
 
   const handleAbbrechen = () => {
     setFormularOffen(false)
@@ -1279,16 +1280,11 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                   <button
                     onClick={(event) => {
                       event.stopPropagation()
-                      onLoeschen(g.id)
+                      setPendingDelete({ id: g.id, name: g.name, anzahl })
                     }}
-                    disabled={anzahl > 0}
-                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
                     aria-label={`Delete ${g.name}`}
-                    title={
-                      anzahl > 0
-                        ? 'Reassign employees to another store first'
-                        : 'Delete store'
-                    }
+                    title="Delete store"
                   >
                     <Trash className="h-4 w-4" />
                   </button>
@@ -1308,6 +1304,40 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
           </p>
         )}
       </div>
+
+      {pendingDelete && (
+        <ModalOverlay onClose={() => setPendingDelete(null)} maxWidthClass="max-w-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400">
+            <Trash className="h-6 w-6" />
+          </div>
+          <h2 className="mt-4 text-lg font-bold text-white">Delete store?</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Are you sure you want to delete <span className="font-semibold text-slate-200">{pendingDelete.name}</span>?
+            {pendingDelete.anzahl > 0
+              ? ` This will also permanently remove its ${pendingDelete.anzahl} employee${pendingDelete.anzahl === 1 ? '' : 's'}.`
+              : ' This cannot be undone.'}
+          </p>
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setPendingDelete(null)}
+              className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onLoeschen(pendingDelete.id)
+                setPendingDelete(null)
+              }}
+              className="rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition hover:bg-rose-400"
+            >
+              Delete
+            </button>
+          </div>
+        </ModalOverlay>
+      )}
     </div>
   )
 }
@@ -2225,9 +2255,22 @@ export default function App() {
     })
   }
 
-  // Remove a store from state
+  // Remove a store, along with its employees and their recorded monthly data
   const handleGeschaeftLoeschen = (id) => {
+    const entfernteMitarbeiterIds = mitarbeiter
+      .filter((m) => m.storeId === id)
+      .map((m) => m.id)
+
     setGeschaefte((prev) => prev.filter((g) => g.id !== id))
+    setMitarbeiter((prev) => prev.filter((m) => m.storeId !== id))
+    setMonatsDaten((prev) => {
+      const next = { ...prev }
+      entfernteMitarbeiterIds.forEach((mitarbeiterId) => {
+        delete next[mitarbeiterId]
+      })
+      return next
+    })
+    setSelectedStoreId((prev) => (prev === id ? null : prev))
   }
 
   // Save a monthly entry (up to four salary payments + hours worked) for
