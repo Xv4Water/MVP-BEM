@@ -21,17 +21,16 @@ Built with **React**, **Tailwind CSS** and **lucide-react**.
   - Quick Actions: "New Store", "New Employee", and "Update Salary", each
     opening its own glass modal
 - **Stores** – overview cards for every branch (each showing its city and
-  German federal state/Bundesland), add/delete stores, and a per-store
-  revenue entry view (month/year picker + history)
-- **Statistics** – yearly/monthly revenue overview with a year picker
+  German federal state/Bundesland), add/delete stores
+- **Statistics** – yearly/monthly payroll overview with a year picker
 - **Settings** – form for the company profile
 - **Layout** – floating icon-only navigation rail + a bordered glass panel
   containing the header (search bar, current date, profile) and page content
 - **Background** – an interactive, pure-SVG map of Germany (national
   outline + all 16 Bundesländer) rendered behind the whole app. Whenever a
-  specific store's employees or revenue view is open, the map smoothly
-  zooms in and isolates that store's Bundesland; it resets to the full
-  national view when you navigate away. Boundary data comes from
+  specific store's employees view is open, the map smoothly zooms in and
+  isolates that store's Bundesland; it resets to the full national view
+  when you navigate away. Boundary data comes from
   [isellsoap/deutschlandGeoJSON](https://github.com/isellsoap/deutschlandGeoJSON)
   (MIT-licensed), pre-processed into `src/germanyMapData.json`.
 
