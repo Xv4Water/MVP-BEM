@@ -1722,50 +1722,67 @@ function StoreEmployeesModal({
             )}
 
             <div className="mt-5 divide-y divide-white/5">
-              {storeEmployees.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setSelectedEmployeeId(m.id)}
-                  className="flex w-full items-center justify-between gap-3 rounded-2xl px-2 py-3 text-left transition-colors hover:bg-white/5"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-xs font-bold text-white">
-                      {m.firstName[0]}
-                      {m.lastName[0]}
+              {storeEmployees.map((m) => {
+                const eintraege = monatsDaten[m.id] ?? []
+                const letzterEintrag = eintraege.reduce((neuester, e) => {
+                  if (!neuester) return e
+                  if (
+                    e.jahr > neuester.jahr ||
+                    (e.jahr === neuester.jahr && e.monat > neuester.monat)
+                  ) {
+                    return e
+                  }
+                  return neuester
+                }, null)
+                const betrag = letzterEintrag
+                  ? letzterEintrag.gehaelter.reduce((summe, g) => summe + g, 0)
+                  : m.salary
+
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelectedEmployeeId(m.id)}
+                    className="flex w-full items-center justify-between gap-3 rounded-2xl px-2 py-3 text-left transition-colors hover:bg-white/5"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-xs font-bold text-white">
+                        {m.firstName[0]}
+                        {m.lastName[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-white">
+                          {m.firstName} {m.lastName}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">{m.position}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-white">
-                        {m.firstName} {m.lastName}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">{m.position}</p>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-sm font-semibold text-white">
-                      {formatEuro(m.salary)}
-                    </span>
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onDelete(m.id)
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className="text-sm font-semibold text-white">
+                        {formatEuro(betrag)}
+                      </span>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(event) => {
                           event.stopPropagation()
                           onDelete(m.id)
-                        }
-                      }}
-                      aria-label={`Delete ${m.firstName} ${m.lastName}`}
-                      title="Delete"
-                      className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </span>
-                  </div>
-                </button>
-              ))}
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.stopPropagation()
+                            onDelete(m.id)
+                          }
+                        }}
+                        aria-label={`Delete ${m.firstName} ${m.lastName}`}
+                        title="Delete"
+                        className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
 
               {storeEmployees.length === 0 && (
                 <p className="rounded-xl bg-white/5 px-4 py-8 text-center text-sm text-slate-500">
