@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useEffect, useRef, useContext, createContext } from 'react'
 import { createPortal } from 'react-dom'
 import {
   LayoutDashboard,
@@ -57,14 +57,29 @@ const EMPLOYEES = [
 /*  HELPER FUNCTIONS                                                          */
 /* -------------------------------------------------------------------------- */
 
-// Format currency (e.g. €4,200)
-const formatEuro = (amount) =>
-  new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+// Currencies selectable in Settings; changing the selection there updates
+// how money is formatted everywhere in the app.
+const CURRENCY_OPTIONS = [
+  { value: 'Euro (€)', label: 'Euro (€)', symbol: '€' },
+  { value: 'US Dollar ($)', label: 'US Dollar ($)', symbol: '$' },
+  { value: 'Swiss Franc (CHF)', label: 'Swiss Franc (CHF)', symbol: 'CHF ' },
+  { value: 'Ghanaian Cedi (₵)', label: 'Ghanaian Cedi (₵)', symbol: '₵' },
+]
+
+// Format an amount with the given currency's symbol (e.g. €4,200) – falls
+// back to Euro if the currency isn't recognized.
+const formatCurrency = (amount, waehrung) => {
+  const symbol = CURRENCY_OPTIONS.find((c) => c.value === waehrung)?.symbol ?? '€'
+  return `${symbol}${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount)}`
+}
+
+// Provides the app-wide selected currency (set in Settings) to every
+// component via useFormatMoney(), without prop-drilling it everywhere.
+const CurrencyContext = createContext(CURRENCY_OPTIONS[0].value)
+const useFormatMoney = () => {
+  const waehrung = useContext(CurrencyContext)
+  return (amount) => formatCurrency(amount, waehrung)
+}
 
 // Mock year-to-date payroll figures per branch, used for the Dashboard's
 // "Payroll by Branches" chart. Falls back to a deterministic estimate for
@@ -494,6 +509,7 @@ function KpiCard({ icon: Icon, label, value, hint, accent, variant = 'standard' 
 /* -------------------------------------------------------------------------- */
 
 function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) {
+  const formatMoney = useFormatMoney()
   const currentYear = new Date().getFullYear()
 
   // KPIs computed dynamically from the data
@@ -562,7 +578,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
         <KpiCard
           icon={Wallet}
           label={`Staff Costs ${currentYear}`}
-          value={formatEuro(kpis.personalkosten)}
+          value={formatMoney(kpis.personalkosten)}
           hint="Gross salaries for the current year"
           accent="bg-amber-500/10 text-amber-400"
           variant="primary"
@@ -577,7 +593,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
           }
           hint={
             kpis.teuersterMitarbeiter
-              ? `${formatEuro(kpis.teuersterMitarbeiter.salary)} · ${kpis.teuersterMitarbeiter.position}`
+              ? `${formatMoney(kpis.teuersterMitarbeiter.salary)} · ${kpis.teuersterMitarbeiter.position}`
               : 'No employees yet'
           }
           accent="bg-rose-500/10 text-rose-400"
@@ -605,7 +621,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
               {ytdPayrollProGeschaeft.map((d) => (
                 <div key={d.id} className="flex w-16 shrink-0 flex-col items-center sm:w-20">
                   <span className="mb-2 text-xs font-semibold text-white">
-                    {formatEuro(d.betrag)}
+                    {formatMoney(d.betrag)}
                   </span>
                   <div className="flex h-48 w-full items-end justify-center">
                     <div
@@ -683,6 +699,7 @@ const GEHALT_Y_MAX = 5000
 const GEHALT_Y_SCHRITTE = [5000, 4000, 3000, 2000, 1000, 0]
 
 function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
+  const formatMoney = useFormatMoney()
   const [hoverIndex, setHoverIndex] = useState(null)
 
   // Without an explicit monthly entry, the employee's base salary is
@@ -740,7 +757,7 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
                   >
                     {hoverIndex === index && (
                       <div className="pointer-events-none absolute -top-8 z-10 whitespace-nowrap rounded-xl bg-lime-400 px-2 py-1 text-xs font-bold text-white shadow-lg shadow-black/40">
-                        {formatEuro(wert)}
+                        {formatMoney(wert)}
                       </div>
                     )}
                     <div
@@ -780,6 +797,7 @@ function MitarbeiterDetailView({
   onZurueck,
   backLabel = 'Back to Employee Management',
 }) {
+  const formatMoney = useFormatMoney()
   const heute = new Date()
   const [jahr, setJahr] = useState(heute.getFullYear())
   const [monat, setMonat] = useState(heute.getMonth())
@@ -877,7 +895,7 @@ function MitarbeiterDetailView({
           <div className="flex gap-6 text-sm">
             <div>
               <p className="text-slate-500">Base Salary</p>
-              <p className="font-semibold text-white">{formatEuro(mitarbeiter.salary)}</p>
+              <p className="font-semibold text-white">{formatMoney(mitarbeiter.salary)}</p>
             </div>
             <div>
               <p className="text-slate-500">Base Hours</p>
@@ -995,7 +1013,7 @@ function MitarbeiterDetailView({
               >
                 <p className="text-sm font-medium text-slate-200">Salary {index + 1}</p>
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-semibold text-white">{formatEuro(betrag)}</p>
+                  <p className="text-sm font-semibold text-white">{formatMoney(betrag)}</p>
                   <button
                     onClick={() => onGehaltLoeschen(mitarbeiter.id, jahr, monat, index)}
                     className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
@@ -1011,7 +1029,7 @@ function MitarbeiterDetailView({
             {aktuellerEintrag && aktuellerEintrag.gehaelter.length > 0 && (
               <div className="flex items-center justify-between border-t border-white/10 px-4 pt-4">
                 <p className="text-sm font-bold text-white">Total</p>
-                <p className="text-sm font-bold text-white">{formatEuro(gehaltGesamt)}</p>
+                <p className="text-sm font-bold text-white">{formatMoney(gehaltGesamt)}</p>
               </div>
             )}
           </div>
@@ -1224,6 +1242,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
 /* -------------------------------------------------------------------------- */
 
 function StatistikView({ mitarbeiter, monatsDaten }) {
+  const formatMoney = useFormatMoney()
   const heute = new Date()
   const currentYear = heute.getFullYear()
   const currentMonthIndex = heute.getMonth()
@@ -1310,7 +1329,7 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
         <KpiCard
           icon={Wallet}
           label={`Wages Paid ${jahr}`}
-          value={formatEuro(jahresSumme)}
+          value={formatMoney(jahresSumme)}
           hint="Sum across all employees"
           accent="bg-lime-400/10 text-lime-400"
           variant="primary"
@@ -1318,14 +1337,14 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
         <KpiCard
           icon={BarChart3}
           label="Average per Month"
-          value={formatEuro(durchschnittProMonat)}
+          value={formatMoney(durchschnittProMonat)}
           hint={`Average monthly wages paid in ${jahr}`}
           accent="bg-emerald-500/10 text-emerald-400"
         />
         <KpiCard
           icon={TrendingUp}
           label="Year-End Forecast (Run Rate)"
-          value={formatEuro(runRate)}
+          value={formatMoney(runRate)}
           hint={runRateHint}
           accent="bg-purple-500/10 text-purple-400"
           variant="primary"
@@ -1361,7 +1380,7 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
               <span
                 className={`mb-2 text-xs font-semibold ${m.istZukunft ? 'text-slate-500' : 'text-white'}`}
               >
-                {formatEuro(m.lohn)}
+                {formatMoney(m.lohn)}
               </span>
               <div className="flex h-48 w-full items-end justify-center">
                 <div
@@ -1389,13 +1408,6 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
 /* -------------------------------------------------------------------------- */
 /*  SETTINGS VIEW                                                            */
 /* -------------------------------------------------------------------------- */
-
-const CURRENCY_OPTIONS = [
-  { value: 'Euro (€)', label: 'Euro (€)' },
-  { value: 'US Dollar ($)', label: 'US Dollar ($)' },
-  { value: 'Swiss Franc (CHF)', label: 'Swiss Franc (CHF)' },
-  { value: 'Ghanaian Cedi (₵)', label: 'Ghanaian Cedi (₵)' },
-]
 
 const EINSTELLUNGEN_DEFAULT = {
   companyName: 'BEM Management GmbH',
@@ -1555,6 +1567,7 @@ function StoreEmployeesModal({
   onMonatSpeichern,
   onGehaltLoeschen,
 }) {
+  const formatMoney = useFormatMoney()
   const [formularOffen, setFormularOffen] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -1758,7 +1771,7 @@ function StoreEmployeesModal({
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <span className="text-sm font-semibold text-white">
-                        {formatEuro(betrag)}
+                        {formatMoney(betrag)}
                       </span>
                       <span
                         role="button"
@@ -2293,6 +2306,7 @@ export default function App() {
   const headerTitel = VIEW_TITEL[activeView]
 
   return (
+    <CurrencyContext.Provider value={einstellungen.waehrung}>
     <div className="relative isolate flex h-screen items-stretch overflow-hidden bg-slate-950">
       {poweringUp && <PowerUpBurst />}
 
@@ -2354,5 +2368,6 @@ export default function App() {
         />
       )}
     </div>
+    </CurrencyContext.Provider>
   )
 }
