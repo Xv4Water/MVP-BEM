@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  /* Renders native form controls (select dropdown lists, scrollbars, etc.)
+     in the browser's dark palette instead of the default light one, so
+     they match the app's dark glass UI. */
+  color-scheme: dark;
+}
+
 html,
 body,
 #root {
