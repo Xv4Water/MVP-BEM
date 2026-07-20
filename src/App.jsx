@@ -95,7 +95,7 @@ const getMockAnnualCost = (storeId) =>
   MOCK_ANNUAL_COSTS[storeId] ?? 100000 + ((storeId * 5000) % 30000)
 
 // Mock year-to-date payroll figures per store, used for the Dashboard's
-// "YTD Payroll by Store" chart. Falls back to a deterministic estimate for
+// "Payroll by Branches" chart. Falls back to a deterministic estimate for
 // any store beyond the four seeded ones.
 const MOCK_YTD_PAYROLL = { 1: 108500, 2: 94200, 3: 121300, 4: 87600 }
 const getMockYtdPayroll = (storeId) =>
@@ -709,7 +709,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-white">
-                YTD Payroll by Store
+                Payroll by Branches
               </h2>
               <p className="text-sm text-slate-400">Total wages paid this year, by branch</p>
             </div>
