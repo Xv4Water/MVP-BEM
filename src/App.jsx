@@ -28,7 +28,7 @@ import {
 
 /* -------------------------------------------------------------------------- */
 /*  MOCK DATABASE                                                             */
-/*  Realistic sample data for stores and employees                           */
+/*  Realistic sample data for branches and employees                          */
 /* -------------------------------------------------------------------------- */
 
 const STORES = [
@@ -39,15 +39,15 @@ const STORES = [
 ]
 
 const EMPLOYEES = [
-  { id: 1, firstName: 'Anna', lastName: 'Schmidt', storeId: 1, position: 'Store Manager', salary: 4200, hours: 40 },
+  { id: 1, firstName: 'Anna', lastName: 'Schmidt', storeId: 1, position: 'Branch Manager', salary: 4200, hours: 40 },
   { id: 2, firstName: 'Lukas', lastName: 'Müller', storeId: 1, position: 'Sales Associate', salary: 2800, hours: 38 },
-  { id: 3, firstName: 'Sophie', lastName: 'Weber', storeId: 2, position: 'Store Manager', salary: 4100, hours: 40 },
+  { id: 3, firstName: 'Sophie', lastName: 'Weber', storeId: 2, position: 'Branch Manager', salary: 4100, hours: 40 },
   { id: 4, firstName: 'Jonas', lastName: 'Fischer', storeId: 2, position: 'Warehouse Assistant', salary: 2600, hours: 35 },
   { id: 5, firstName: 'Marie', lastName: 'Wagner', storeId: 2, position: 'Sales Associate', salary: 2750, hours: 30 },
-  { id: 6, firstName: 'Felix', lastName: 'Becker', storeId: 3, position: 'Store Manager', salary: 4300, hours: 40 },
+  { id: 6, firstName: 'Felix', lastName: 'Becker', storeId: 3, position: 'Branch Manager', salary: 4300, hours: 40 },
   { id: 7, firstName: 'Laura', lastName: 'Hoffmann', storeId: 3, position: 'Sales Associate', salary: 2900, hours: 40 },
   { id: 8, firstName: 'Paul', lastName: 'Schäfer', storeId: 3, position: 'Part-Time Assistant', salary: 1400, hours: 20 },
-  { id: 9, firstName: 'Emma', lastName: 'Koch', storeId: 4, position: 'Store Manager', salary: 4000, hours: 40 },
+  { id: 9, firstName: 'Emma', lastName: 'Koch', storeId: 4, position: 'Branch Manager', salary: 4000, hours: 40 },
   { id: 10, firstName: 'Tim', lastName: 'Richter', storeId: 4, position: 'Sales Associate', salary: 2850, hours: 38 },
   { id: 11, firstName: 'Lena', lastName: 'Klein', storeId: 4, position: 'Part-Time Assistant', salary: 1300, hours: 18 },
   { id: 12, firstName: 'Max', lastName: 'Wolf', storeId: 1, position: 'Warehouse Assistant', salary: 2650, hours: 37 },
@@ -66,14 +66,14 @@ const formatEuro = (amount) =>
     maximumFractionDigits: 0,
   }).format(amount)
 
-// Mock year-to-date payroll figures per store, used for the Dashboard's
+// Mock year-to-date payroll figures per branch, used for the Dashboard's
 // "Payroll by Branches" chart. Falls back to a deterministic estimate for
-// any store beyond the four seeded ones.
+// any branch beyond the four seeded ones.
 const MOCK_YTD_PAYROLL = { 1: 108500, 2: 94200, 3: 121300, 4: 87600 }
 const getMockYtdPayroll = (storeId) =>
   MOCK_YTD_PAYROLL[storeId] ?? 90000 + ((storeId * 4300) % 35000)
 
-// Map a storeId to its store
+// Map a storeId to its branch
 const getStoreName = (storeId, storeList) =>
   storeList.find((s) => s.id === storeId)?.name ?? 'Unknown'
 
@@ -124,7 +124,7 @@ const MONTHS_SHORT = [
 
 const NAV_LINKS = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { key: 'geschaefte', label: 'Stores', icon: Store },
+  { key: 'geschaefte', label: 'Branches', icon: Store },
   { key: 'statistik', label: 'Statistics', icon: BarChart3 },
   { key: 'einstellungen', label: 'Settings', icon: Settings },
 ]
@@ -526,7 +526,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
     return { aktiveGeschaefte, gesamtMitarbeiter, personalkosten, teuersterMitarbeiter }
   }, [geschaefte, mitarbeiter, monatsDaten, currentYear])
 
-  // YTD payroll per store for the bar chart (illustrative mock figures)
+  // YTD payroll per branch for the bar chart (illustrative mock figures)
   const ytdPayrollProGeschaeft = useMemo(
     () =>
       geschaefte.map((g) => ({
@@ -544,9 +544,9 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           icon={Store}
-          label="Active Stores"
+          label="Active Branches"
           value={kpis.aktiveGeschaefte}
-          hint="Stores nationwide"
+          hint="Branches nationwide"
           accent="bg-lime-400/10 text-lime-400"
         />
         <KpiCard
@@ -583,7 +583,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Chart: YTD payroll per store */}
+        {/* Chart: YTD payroll per branch */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 lg:col-span-2">
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -595,7 +595,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
           </div>
 
           {ytdPayrollProGeschaeft.length === 0 && (
-            <p className="text-sm text-slate-500">No stores created yet.</p>
+            <p className="text-sm text-slate-500">No branches created yet.</p>
           )}
           {ytdPayrollProGeschaeft.length > 0 && (
             <div className="flex items-end justify-between gap-3 sm:gap-6">
@@ -635,7 +635,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
               className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
               <PlusCircle className="h-5 w-5 text-lime-400" />
-              New Store
+              New Branch
             </button>
             <button
               onClick={() => onQuickAction('employee')}
@@ -656,8 +656,8 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
           <div className="mt-6 rounded-2xl bg-white/5 p-4">
             <p className="text-sm font-medium text-slate-200">Tip</p>
             <p className="mt-1 text-xs text-slate-400">
-              Click any store on the Stores page to view, add, or manage its
-              staff.
+              Click any branch on the Branches page to view, add, or manage
+              its staff.
             </p>
           </div>
         </div>
@@ -1021,8 +1021,8 @@ function MitarbeiterDetailView({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  STORES VIEW                                                              */
-/*  Show stores, and add or delete them                                      */
+/*  BRANCHES VIEW                                                            */
+/*  Show branches, and add or delete them                                    */
 /* -------------------------------------------------------------------------- */
 
 function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onSelectStore }) {
@@ -1050,25 +1050,25 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Stores</h2>
-          <p className="text-sm text-slate-400">{geschaefte.length} active stores</p>
+          <h2 className="text-lg font-bold text-white">Branches</h2>
+          <p className="text-sm text-slate-400">{geschaefte.length} active branches</p>
         </div>
         <button
           onClick={() => setFormularOffen((offen) => !offen)}
           className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
         >
           <PlusCircle className="h-4 w-4 text-lime-400" />
-          New Store
+          New Branch
         </button>
       </div>
 
-      {/* Form: add new store */}
+      {/* Form: add new branch */}
       {formularOffen && (
         <form
           onSubmit={handleSubmit}
           className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20"
         >
-          <h3 className="text-base font-bold text-white">Add New Store</h3>
+          <h3 className="text-base font-bold text-white">Add New Branch</h3>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
@@ -1122,7 +1122,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
               type="submit"
               className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
             >
-              Save Store
+              Save Branch
             </button>
           </div>
         </form>
@@ -1157,7 +1157,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                     }}
                     className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
                     aria-label={`Delete ${g.name}`}
-                    title="Delete store"
+                    title="Delete branch"
                   >
                     <Trash className="h-4 w-4" />
                   </button>
@@ -1173,7 +1173,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
 
         {geschaefte.length === 0 && (
           <p className="col-span-full rounded-3xl border border-dashed border-white/10 bg-white/[0.06] px-6 py-12 text-center text-sm text-slate-500">
-            No stores yet. Use "New Store" to create your first one.
+            No branches yet. Use "New Branch" to create your first one.
           </p>
         )}
       </div>
@@ -1183,7 +1183,7 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400">
             <Trash className="h-6 w-6" />
           </div>
-          <h2 className="mt-4 text-lg font-bold text-white">Delete store?</h2>
+          <h2 className="mt-4 text-lg font-bold text-white">Delete branch?</h2>
           <p className="mt-2 text-sm text-slate-400">
             Are you sure you want to delete <span className="font-semibold text-slate-200">{pendingDelete.name}</span>?
             {pendingDelete.anzahl > 0
@@ -1465,7 +1465,7 @@ function EinstellungenView() {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-200">
-              Store (Headquarters)
+              Branch (Headquarters)
             </label>
             <input
               type="text"
@@ -1512,10 +1512,10 @@ function EinstellungenView() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  STORE EMPLOYEES MODAL                                                     */
-/*  Opened from the Dashboard's "Employees per Store" list – shows only the   */
-/*  employees for the clicked store, with add/delete and per-employee        */
-/*  monthly salary entry, all inside a glass modal overlay.                  */
+/*  BRANCH EMPLOYEES MODAL                                                    */
+/*  Opened from the Branches page – shows only the employees for the clicked */
+/*  branch, with add/delete and per-employee monthly salary entry, all       */
+/*  inside a glass modal overlay.                                            */
 /* -------------------------------------------------------------------------- */
 
 function ModalOverlay({ onClose, maxWidthClass = 'max-w-2xl', children }) {
@@ -1767,7 +1767,7 @@ function StoreEmployeesModal({
 
               {storeEmployees.length === 0 && (
                 <p className="rounded-xl bg-white/5 px-4 py-8 text-center text-sm text-slate-500">
-                  No employees at this store yet.
+                  No employees at this branch yet.
                 </p>
               )}
             </div>
@@ -1796,7 +1796,7 @@ function NewStoreModal({ onClose, onHinzufuegen }) {
   return (
     <ModalOverlay onClose={onClose} maxWidthClass="max-w-lg">
       <div className="flex items-start justify-between gap-4">
-        <h2 className="text-lg font-bold text-white">New Store</h2>
+        <h2 className="text-lg font-bold text-white">New Branch</h2>
         <button
           onClick={onClose}
           aria-label="Close"
@@ -1852,7 +1852,7 @@ function NewStoreModal({ onClose, onHinzufuegen }) {
             type="submit"
             className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
           >
-            Save Store
+            Save Branch
           </button>
         </div>
       </form>
@@ -1938,14 +1938,14 @@ function NewEmployeeModal({ geschaefte, onClose, onHinzufuegen }) {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-200">
-              Store
+              Branch
             </label>
             <Dropdown
               value={storeId}
               onChange={(v) => setStoreId(v)}
               options={
                 geschaefte.length === 0
-                  ? [{ value: '', label: 'No store available' }]
+                  ? [{ value: '', label: 'No branch available' }]
                   : geschaefte.map((g) => ({ value: g.id, label: `${g.name} · ${g.city}` }))
               }
               className="w-full"
@@ -2119,7 +2119,7 @@ function PowerUpBurst() {
 
 const VIEW_TITEL = {
   dashboard: 'Dashboard',
-  geschaefte: 'Stores',
+  geschaefte: 'Branches',
   statistik: 'Statistics',
   einstellungen: 'Settings',
 }
@@ -2173,7 +2173,7 @@ export default function App() {
     })
   }
 
-  // Add a new store
+  // Add a new branch
   const handleGeschaeftHinzufuegen = (name, city, state) => {
     setGeschaefte((prev) => {
       const neueId = Math.max(0, ...prev.map((g) => g.id)) + 1
@@ -2181,7 +2181,7 @@ export default function App() {
     })
   }
 
-  // Remove a store, along with its employees and their recorded monthly data
+  // Remove a branch, along with its employees and their recorded monthly data
   const handleGeschaeftLoeschen = (id) => {
     const entfernteMitarbeiterIds = mitarbeiter
       .filter((m) => m.storeId === id)

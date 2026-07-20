@@ -1,6 +1,6 @@
 # BEM Dashboard – Business Management (MVP)
 
-A responsive business management dashboard for overseeing multiple stores
+A responsive business management dashboard for overseeing multiple branches
 and employees, styled as a dark glassmorphism UI with a neon-lime accent.
 The entire user interface is in **English**.
 
@@ -10,18 +10,18 @@ Built with **React**, **Tailwind CSS** and **lucide-react**.
 
 - **Login** – demo sign-in screen (Username: `Business`, Password: `Business123`)
 - **Dashboard** – KPI cards computed dynamically from the data:
-  - Active Stores
+  - Active Branches
   - Total Employees
   - Staff Costs for the current year
   - Most Expensive employee
-  - "Employees per Store" bar list – click any store to open a modal with
-    that store's employees (add/delete, and a per-employee detail view to
-    record up to four salary payments and hours worked per month, plus a
-    salary history chart)
-  - Quick Actions: "New Store", "New Employee", and "Update Salary", each
+  - "Payroll by Branches" bar chart – total wages paid this year, per branch
+  - Quick Actions: "New Branch", "New Employee", and "Update Salary", each
     opening its own glass modal
-- **Stores** – overview cards for every branch (each showing its city and
-  German federal state/Bundesland), add/delete stores
+- **Branches** – overview cards for every branch (each showing its city and
+  federal state/region), add/delete branches; click a branch card to manage
+  its employees (add/delete, and a per-employee detail view to record up to
+  four salary payments and hours worked per month, plus a salary history
+  chart)
 - **Statistics** – yearly/monthly payroll overview with a year picker
 - **Settings** – form for the company profile
 - **Layout** – floating icon-only navigation rail + a bordered glass panel
