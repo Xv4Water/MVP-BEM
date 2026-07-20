@@ -1404,9 +1404,8 @@ const EINSTELLUNGEN_DEFAULT = {
   waehrung: 'Euro (€)',
 }
 
-function EinstellungenView() {
-  const [gespeichert, setGespeichert] = useState(EINSTELLUNGEN_DEFAULT)
-  const [entwurf, setEntwurf] = useState(EINSTELLUNGEN_DEFAULT)
+function EinstellungenView({ gespeichert, onSpeichern }) {
+  const [entwurf, setEntwurf] = useState(gespeichert)
   const [zeigeGespeichert, setZeigeGespeichert] = useState(false)
 
   // Briefly confirm the save, then hide the confirmation again
@@ -1427,7 +1426,7 @@ function EinstellungenView() {
 
   const handleSpeichern = (event) => {
     event.preventDefault()
-    setGespeichert(entwurf)
+    onSpeichern(entwurf)
     setZeigeGespeichert(true)
   }
 
@@ -2137,6 +2136,7 @@ export default function App() {
   const [selectedStoreId, setSelectedStoreId] = useState(null)
   // Which Dashboard "Quick Actions" modal is open: 'store' | 'employee' | 'salary' | null
   const [quickModal, setQuickModal] = useState(null)
+  const [einstellungen, setEinstellungen] = useState(EINSTELLUNGEN_DEFAULT)
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
@@ -2262,7 +2262,12 @@ export default function App() {
           />
         )
       case 'einstellungen':
-        return <EinstellungenView />
+        return (
+          <EinstellungenView
+            gespeichert={einstellungen}
+            onSpeichern={setEinstellungen}
+          />
+        )
       default:
         return null
     }
