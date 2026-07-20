@@ -253,7 +253,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
 
       <aside
         className={`fixed inset-y-0 left-0 z-40 m-4 flex h-[calc(100vh-2rem)] w-20 flex-shrink-0 flex-col items-center gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-3 backdrop-blur-2xl transition-transform duration-300 md:static md:h-[calc(100vh-2rem)] md:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          mobileOpen ? 'translate-x-0' : '-translate-x-[calc(100%+1rem)]'
         }`}
       >
         <button
