@@ -616,34 +616,32 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
             </div>
           </div>
 
-          <div className="space-y-3">
-            {ytdPayrollProGeschaeft.length === 0 && (
-              <p className="text-sm text-slate-500">No stores created yet.</p>
-            )}
-            {ytdPayrollProGeschaeft.map((d) => (
-              <div key={d.id} className="rounded-2xl p-2">
-                <div className="mb-1.5 flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-200">{d.name}</span>
-                  <span className="font-semibold text-white">{formatEuro(d.betrag)}</span>
-                </div>
-                <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500 transition-all duration-500"
-                    style={{
-                      width: `${Math.min((d.betrag / PAYROLL_ACHSE_MAX) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
+          {ytdPayrollProGeschaeft.length === 0 && (
+            <p className="text-sm text-slate-500">No stores created yet.</p>
+          )}
           {ytdPayrollProGeschaeft.length > 0 && (
-            <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-              <span>€0k</span>
-              <span>€50k</span>
-              <span>€100k</span>
-              <span>€150k</span>
+            <div className="flex items-end justify-between gap-3 sm:gap-6">
+              {ytdPayrollProGeschaeft.map((d) => (
+                <div key={d.id} className="flex flex-1 flex-col items-center">
+                  <span className="mb-2 text-xs font-semibold text-white">
+                    {formatEuro(d.betrag)}
+                  </span>
+                  <div className="flex h-48 w-full items-end justify-center">
+                    <div
+                      className="w-10 rounded-t-xl bg-gradient-to-t from-lime-400 to-emerald-500 transition-all duration-500 sm:w-14"
+                      style={{
+                        height: `${Math.max(
+                          Math.min((d.betrag / PAYROLL_ACHSE_MAX) * 100, 100),
+                          4,
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="mt-3 text-center text-xs font-medium text-slate-400">
+                    {d.name}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </div>
