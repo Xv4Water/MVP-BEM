@@ -1441,7 +1441,7 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
 /*  Revenue by year and month                                                */
 /* -------------------------------------------------------------------------- */
 
-function StatistikView({ geschaefte, umsatzDaten }) {
+function StatistikView({ mitarbeiter, monatsDaten }) {
   const heute = new Date()
   const [jahr, setJahr] = useState(heute.getFullYear())
 
@@ -1451,28 +1451,33 @@ function StatistikView({ geschaefte, umsatzDaten }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Total revenue for each month of the selected year, from the recorded data
+  // Total wages paid for each month of the selected year, from the recorded
+  // salary entries – falling back to each employee's base salary for months
+  // without an explicit entry, same logic as the Dashboard's Staff Costs KPI
   const monatsStatistik = useMemo(() => {
     return MONTHS.map((name, monatIndex) => {
-      const umsatz = geschaefte.reduce((summe, g) => {
-        const eintrag = (umsatzDaten[g.id] ?? []).find(
+      const lohn = mitarbeiter.reduce((summe, m) => {
+        const eintrag = (monatsDaten[m.id] ?? []).find(
           (e) => e.jahr === jahr && e.monat === monatIndex,
         )
-        return summe + (eintrag ? eintrag.umsatz : 0)
+        const gehalt = eintrag
+          ? eintrag.gehaelter.reduce((teilsumme, betrag) => teilsumme + betrag, 0)
+          : m.salary
+        return summe + gehalt
       }, 0)
 
-      return { monat: monatIndex, name, umsatz }
+      return { monat: monatIndex, name, lohn }
     })
-  }, [geschaefte, umsatzDaten, jahr])
+  }, [mitarbeiter, monatsDaten, jahr])
 
   const jahresSumme = useMemo(
-    () => monatsStatistik.reduce((summe, m) => summe + m.umsatz, 0),
+    () => monatsStatistik.reduce((summe, m) => summe + m.lohn, 0),
     [monatsStatistik],
   )
 
   const durchschnittProMonat = Math.round(jahresSumme / 12)
 
-  const maxUmsatz = Math.max(...monatsStatistik.map((m) => m.umsatz), 1)
+  const maxLohn = Math.max(...monatsStatistik.map((m) => m.lohn), 1)
 
   return (
     <div className="space-y-6">
@@ -1480,7 +1485,7 @@ function StatistikView({ geschaefte, umsatzDaten }) {
         <div>
           <h2 className="text-lg font-bold text-white">Statistics</h2>
           <p className="text-sm text-slate-400">
-            Monthly revenue overview
+            Monthly payroll overview
           </p>
         </div>
         <div>
@@ -1501,17 +1506,17 @@ function StatistikView({ geschaefte, umsatzDaten }) {
       {/* Yearly KPIs */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <KpiCard
-          icon={TrendingUp}
-          label={`Revenue ${jahr}`}
+          icon={Wallet}
+          label={`Wages Paid ${jahr}`}
           value={formatEuro(jahresSumme)}
-          hint="Sum across all stores"
+          hint="Sum across all employees"
           accent="bg-lime-400/10 text-lime-400"
         />
         <KpiCard
           icon={BarChart3}
           label="Average per Month"
           value={formatEuro(durchschnittProMonat)}
-          hint={`Average monthly revenue in ${jahr}`}
+          hint={`Average monthly wages paid in ${jahr}`}
           accent="bg-emerald-500/10 text-emerald-400"
         />
       </div>
@@ -1523,7 +1528,7 @@ function StatistikView({ geschaefte, umsatzDaten }) {
             <thead>
               <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-6 py-4 font-semibold">Month</th>
-                <th className="px-6 py-4 font-semibold">Revenue</th>
+                <th className="px-6 py-4 font-semibold">Wages Paid</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -1533,12 +1538,12 @@ function StatistikView({ geschaefte, umsatzDaten }) {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <span className="w-24 shrink-0 tabular-nums text-slate-200">
-                        {formatEuro(m.umsatz)}
+                        {formatEuro(m.lohn)}
                       </span>
                       <div className="h-2 w-24 overflow-hidden rounded-full bg-white/10">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500"
-                          style={{ width: `${(m.umsatz / maxUmsatz) * 100}%` }}
+                          style={{ width: `${(m.lohn / maxLohn) * 100}%` }}
                         />
                       </div>
                     </div>
@@ -2471,8 +2476,8 @@ export default function App() {
       case 'statistik':
         return (
           <StatistikView
-            geschaefte={geschaefte}
-            umsatzDaten={umsatzDaten}
+            mitarbeiter={mitarbeiter}
+            monatsDaten={monatsDaten}
           />
         )
       case 'einstellungen':
