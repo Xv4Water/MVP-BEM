@@ -25,7 +25,6 @@ import {
   TrendingUp,
   ChevronDown,
 } from 'lucide-react'
-import GERMANY_MAP from './germanyMapData.json'
 
 /* -------------------------------------------------------------------------- */
 /*  MOCK DATABASE                                                             */
@@ -151,93 +150,6 @@ const NAV_LINKS = [
 ]
 
 /* -------------------------------------------------------------------------- */
-/*  BACKGROUND MAP                                                            */
-/*  Interactive Germany map used as the app-wide background. When            */
-/*  selectedState is set, the map zooms in on that Bundesland and fades      */
-/*  out every other boundary.                                                */
-/* -------------------------------------------------------------------------- */
-
-function GermanyMap({ selectedState, glow = false }) {
-  const { viewBox, countryPath, states } = GERMANY_MAP
-  const [, , vw, vh] = viewBox
-  const selected = states.find((s) => s.name === selectedState)
-
-  let k = 1
-  let tx = 0
-  let ty = 0
-  if (selected) {
-    const [x0, y0, x1, y1] = selected.bbox
-    const bw = x1 - x0
-    const bh = y1 - y0
-    const cx = (x0 + x1) / 2
-    const cy = (y0 + y1) / 2
-    const targetW = vw * 0.55
-    const targetH = vh * 0.55
-    k = Math.min(targetW / bw, targetH / bh, 6)
-    tx = vw / 2 - k * cx
-    ty = vh / 2 - k * cy
-  }
-
-  const strokeColor = glow ? '#a3e635' : '#ffffff'
-  const baseStrokeWidth = glow ? 1.9 : 1.6
-  const stateStrokeWidth = glow ? 1.4 : 1.1
-  const selectedStrokeWidth = glow ? 2.4 : 1.8
-  const selectedFill = glow ? 'rgba(163,230,53,0.14)' : 'rgba(163,230,53,0.07)'
-
-  return (
-    <svg viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" className="h-full w-full">
-      {glow && (
-        <defs>
-          <filter id="germanyMapGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3.2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-      )}
-      <g
-        style={{
-          transform: `translate(${tx}px, ${ty}px) scale(${k})`,
-          transformOrigin: '0 0',
-          transition: 'transform 900ms cubic-bezier(0.22, 1, 0.36, 1)',
-        }}
-        filter={glow ? 'url(#germanyMapGlow)' : undefined}
-      >
-        <path
-          d={countryPath}
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth={baseStrokeWidth / k}
-          strokeLinejoin="round"
-          style={{ opacity: selected ? 0 : 0.85, transition: 'opacity 700ms ease' }}
-        />
-        {states.map((s) => {
-          const isSelected = selected && s.name === selected.name
-          return (
-            <path
-              key={s.name}
-              d={s.path}
-              fillRule="evenodd"
-              fill={isSelected ? selectedFill : 'transparent'}
-              stroke={strokeColor}
-              strokeWidth={(isSelected ? selectedStrokeWidth : stateStrokeWidth) / k}
-              strokeLinejoin="round"
-              style={{
-                opacity: !selected || isSelected ? 0.85 : 0,
-                transition: 'opacity 700ms ease, fill 700ms ease',
-              }}
-            />
-          )
-        })}
-      </g>
-    </svg>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /*  LOGIN CREDENTIALS (demo)                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -270,12 +182,6 @@ function LoginView({ onLogin }) {
 
   return (
     <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4">
-      <div className="pointer-events-none absolute inset-0 z-[-1] overflow-hidden">
-        <div className="h-full w-full scale-110">
-          <GermanyMap selectedState={null} />
-        </div>
-      </div>
-
       <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-[#0a0b10]/80 p-8 shadow-2xl shadow-black/40">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400 text-white shadow-lg shadow-lime-400/30">
@@ -2176,8 +2082,8 @@ function UpdateSalaryModal({ mitarbeiter, geschaefte, monatsDaten, onClose, onMo
 
 /* -------------------------------------------------------------------------- */
 /*  POWER-UP TRANSITION                                                       */
-/*  Plays once right after a successful login: a green energy burst that     */
-/*  hands off into the app's neon-glow map.                                  */
+/*  Plays once right after a successful login: a white flash and an          */
+/*  expanding green energy burst.                                            */
 /* -------------------------------------------------------------------------- */
 
 function PowerUpBurst() {
@@ -2254,7 +2160,7 @@ export default function App() {
   }
 
   // Power-up transition into the app after a successful login: a brief
-  // green energy-burst flash, then the map settles into its neon glow.
+  // white flash and green energy-burst.
   const handleAnmelden = () => {
     setIstAngemeldet(true)
     const prefersReducedMotion =
@@ -2340,10 +2246,6 @@ export default function App() {
 
   const selectedStore = geschaefte.find((g) => g.id === selectedStoreId)
 
-  // Which Bundesland the background map should zoom into: the store whose
-  // employee modal is open.
-  const mapSelectedState = selectedStore?.state ?? null
-
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
@@ -2383,12 +2285,6 @@ export default function App() {
 
   return (
     <div className="relative isolate flex h-screen items-stretch overflow-hidden bg-slate-950">
-      <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
-        <div className="h-full w-full scale-110">
-          <GermanyMap selectedState={mapSelectedState} glow />
-        </div>
-      </div>
-
       {poweringUp && <PowerUpBurst />}
 
       <div className="relative z-40">
