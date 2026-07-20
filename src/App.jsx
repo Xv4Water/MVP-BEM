@@ -654,9 +654,9 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
           <div className="mt-6 space-y-3">
             <button
               onClick={() => onQuickAction('store')}
-              className="flex w-full items-center gap-3 rounded-2xl bg-lime-400 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
             >
-              <PlusCircle className="h-5 w-5" />
+              <PlusCircle className="h-5 w-5 text-lime-400" />
               New Store
             </button>
             <button
