@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   LayoutDashboard,
   Store,
@@ -22,6 +23,7 @@ import {
   AlertCircle,
   BarChart3,
   TrendingUp,
+  ChevronDown,
 } from 'lucide-react'
 import GERMANY_MAP from './germanyMapData.json'
 
@@ -421,6 +423,105 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
         </div>
       </aside>
     </>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  DROPDOWN                                                                  */
+/*  Custom-styled select replacement – native <select> popups always render  */
+/*  with the OS/browser's own (light) theme, which clashes with the dark     */
+/*  glass UI, so this renders the option list ourselves.                     */
+/* -------------------------------------------------------------------------- */
+
+function Dropdown({ value, onChange, options, className = '', buttonClassName = '' }) {
+  const [offen, setOffen] = useState(false)
+  const [rect, setRect] = useState(null)
+  const buttonRef = useRef(null)
+  const panelRef = useRef(null)
+
+  // The option list is portaled to <body> and fixed-positioned against the
+  // button's rect, so it can float above modals instead of being clipped by
+  // their overflow-y-auto scroll container.
+  useEffect(() => {
+    if (!offen) return
+    const updateRect = () => {
+      if (buttonRef.current) setRect(buttonRef.current.getBoundingClientRect())
+    }
+    updateRect()
+    window.addEventListener('scroll', updateRect, true)
+    window.addEventListener('resize', updateRect)
+    return () => {
+      window.removeEventListener('scroll', updateRect, true)
+      window.removeEventListener('resize', updateRect)
+    }
+  }, [offen])
+
+  useEffect(() => {
+    const handleClickAway = (event) => {
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target) &&
+        !(panelRef.current && panelRef.current.contains(event.target))
+      ) {
+        setOffen(false)
+      }
+    }
+    const handleKey = (event) => {
+      if (event.key === 'Escape') setOffen(false)
+    }
+    document.addEventListener('mousedown', handleClickAway)
+    window.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClickAway)
+      window.removeEventListener('keydown', handleKey)
+    }
+  }, [])
+
+  const selected = options.find((o) => String(o.value) === String(value))
+
+  return (
+    <div className={`relative ${className}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOffen((o) => !o)}
+        className={`flex w-full items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-left text-sm font-medium text-slate-200 outline-none transition focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20 ${buttonClassName}`}
+      >
+        <span className="truncate">{selected ? selected.label : ''}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${offen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {offen &&
+        rect &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{ position: 'fixed', top: rect.bottom + 8, left: rect.left, width: rect.width }}
+            className="z-[100] max-h-64 overflow-y-auto rounded-2xl border border-white/10 bg-[#1a1c23] p-1.5 shadow-2xl shadow-black/40 backdrop-blur-xl"
+          >
+            {options.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => {
+                  onChange(o.value)
+                  setOffen(false)
+                }}
+                className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-sm transition ${
+                  String(o.value) === String(value)
+                    ? 'bg-lime-400/10 font-semibold text-lime-400'
+                    : 'text-slate-200 hover:bg-white/10'
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </div>
   )
 }
 
@@ -920,33 +1021,23 @@ function MitarbeiterDetailView({
                 <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Month
                 </label>
-                <select
+                <Dropdown
                   value={monat}
-                  onChange={(e) => setMonat(Number(e.target.value))}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-                >
-                  {MONTHS.map((name, index) => (
-                    <option key={name} value={index}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setMonat(Number(v))}
+                  options={MONTHS.map((name, index) => ({ value: index, label: name }))}
+                  className="w-full"
+                />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Year
                 </label>
-                <select
+                <Dropdown
                   value={jahr}
-                  onChange={(e) => setJahr(Number(e.target.value))}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-                >
-                  {jahresOptionen.map((j) => (
-                    <option key={j} value={j}>
-                      {j}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setJahr(Number(v))}
+                  options={jahresOptionen.map((j) => ({ value: j, label: String(j) }))}
+                  className="w-full"
+                />
               </div>
             </div>
 
@@ -1140,18 +1231,12 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 State
               </label>
-              <select
+              <Dropdown
                 value={bundesland}
-                onChange={(e) => setBundesland(e.target.value)}
-                required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              >
-                {GERMAN_STATES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setBundesland(v)}
+                options={GERMAN_STATES.map((s) => ({ value: s, label: s }))}
+                className="w-full"
+              />
             </div>
           </div>
           <div className="mt-5 flex justify-end gap-3">
@@ -1333,33 +1418,23 @@ function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeich
                 <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Month
                 </label>
-                <select
+                <Dropdown
                   value={monat}
-                  onChange={(e) => setMonat(Number(e.target.value))}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-                >
-                  {MONTHS.map((name, index) => (
-                    <option key={name} value={index}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setMonat(Number(v))}
+                  options={MONTHS.map((name, index) => ({ value: index, label: name }))}
+                  className="w-full"
+                />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-200">
                   Year
                 </label>
-                <select
+                <Dropdown
                   value={jahr}
-                  onChange={(e) => setJahr(Number(e.target.value))}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-                >
-                  {jahresOptionen.map((j) => (
-                    <option key={j} value={j}>
-                      {j}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setJahr(Number(v))}
+                  options={jahresOptionen.map((j) => ({ value: j, label: String(j) }))}
+                  className="w-full"
+                />
               </div>
             </div>
 
@@ -1489,17 +1564,12 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
           </p>
         </div>
         <div>
-          <select
+          <Dropdown
             value={jahr}
-            onChange={(e) => setJahr(Number(e.target.value))}
-            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-2.5 text-sm font-medium text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:ring-2 focus:ring-lime-400/20"
-          >
-            {jahresOptionen.map((j) => (
-              <option key={j} value={j}>
-                {j}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setJahr(Number(v))}
+            options={jahresOptionen.map((j) => ({ value: j, label: String(j) }))}
+            className="w-36"
+          />
         </div>
       </div>
 
@@ -1563,6 +1633,8 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
 /* -------------------------------------------------------------------------- */
 
 function EinstellungenView() {
+  const [waehrung, setWaehrung] = useState('Euro (€)')
+
   return (
     <div className="space-y-6">
       <div>
@@ -1607,11 +1679,16 @@ function EinstellungenView() {
             <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Currency
             </label>
-            <select className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20">
-              <option>Euro (€)</option>
-              <option>US Dollar ($)</option>
-              <option>Swiss Franc (CHF)</option>
-            </select>
+            <Dropdown
+              value={waehrung}
+              onChange={(v) => setWaehrung(v)}
+              options={[
+                { value: 'Euro (€)', label: 'Euro (€)' },
+                { value: 'US Dollar ($)', label: 'US Dollar ($)' },
+                { value: 'Swiss Franc (CHF)', label: 'Swiss Franc (CHF)' },
+              ]}
+              className="w-full"
+            />
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
@@ -1997,18 +2074,12 @@ function NewStoreModal({ onClose, onHinzufuegen }) {
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-200">State</label>
-          <select
+          <Dropdown
             value={bundesland}
-            onChange={(e) => setBundesland(e.target.value)}
-            required
-            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-          >
-            {GERMAN_STATES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setBundesland(v)}
+            options={GERMAN_STATES.map((s) => ({ value: s, label: s }))}
+            className="w-full"
+          />
         </div>
         <div className="flex justify-end gap-3 pt-1">
           <button
@@ -2110,19 +2181,16 @@ function NewEmployeeModal({ geschaefte, onClose, onHinzufuegen }) {
             <label className="mb-1.5 block text-sm font-medium text-slate-200">
               Store
             </label>
-            <select
+            <Dropdown
               value={storeId}
-              onChange={(e) => setStoreId(e.target.value)}
-              required
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-            >
-              {geschaefte.length === 0 && <option value="">No store available</option>}
-              {geschaefte.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name} · {g.city}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setStoreId(v)}
+              options={
+                geschaefte.length === 0
+                  ? [{ value: '', label: 'No store available' }]
+                  : geschaefte.map((g) => ({ value: g.id, label: `${g.name} · ${g.city}` }))
+              }
+              className="w-full"
+            />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-200">
@@ -2217,18 +2285,18 @@ function UpdateSalaryModal({ mitarbeiter, geschaefte, monatsDaten, onClose, onMo
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 Employee
               </label>
-              <select
+              <Dropdown
                 value={selectedEmployeeId}
-                onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              >
-                <option value="">Select an employee…</option>
-                {mitarbeiter.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.firstName} {m.lastName} · {getStoreName(m.storeId, geschaefte)}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setSelectedEmployeeId(v)}
+                options={[
+                  { value: '', label: 'Select an employee…' },
+                  ...mitarbeiter.map((m) => ({
+                    value: m.id,
+                    label: `${m.firstName} ${m.lastName} · ${getStoreName(m.storeId, geschaefte)}`,
+                  })),
+                ]}
+                className="w-full"
+              />
             </div>
           )}
         </>
