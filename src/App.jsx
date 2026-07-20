@@ -1515,8 +1515,46 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
 /*  SETTINGS VIEW                                                            */
 /* -------------------------------------------------------------------------- */
 
+const CURRENCY_OPTIONS = [
+  { value: 'Euro (€)', label: 'Euro (€)' },
+  { value: 'US Dollar ($)', label: 'US Dollar ($)' },
+  { value: 'Swiss Franc (CHF)', label: 'Swiss Franc (CHF)' },
+  { value: 'Ghanaian Cedi (₵)', label: 'Ghanaian Cedi (₵)' },
+]
+
+const EINSTELLUNGEN_DEFAULT = {
+  companyName: 'BEM Management GmbH',
+  email: 'info@bem-gmbh.de',
+  storeHq: 'Berlin',
+  waehrung: 'Euro (€)',
+}
+
 function EinstellungenView() {
-  const [waehrung, setWaehrung] = useState('Euro (€)')
+  const [gespeichert, setGespeichert] = useState(EINSTELLUNGEN_DEFAULT)
+  const [entwurf, setEntwurf] = useState(EINSTELLUNGEN_DEFAULT)
+  const [zeigeGespeichert, setZeigeGespeichert] = useState(false)
+
+  // Briefly confirm the save, then hide the confirmation again
+  useEffect(() => {
+    if (!zeigeGespeichert) return
+    const timeout = setTimeout(() => setZeigeGespeichert(false), 2500)
+    return () => clearTimeout(timeout)
+  }, [zeigeGespeichert])
+
+  const handleFeldAendern = (feld, wert) => {
+    setEntwurf((prev) => ({ ...prev, [feld]: wert }))
+  }
+
+  const handleAbbrechen = () => {
+    setEntwurf(gespeichert)
+    setZeigeGespeichert(false)
+  }
+
+  const handleSpeichern = (event) => {
+    event.preventDefault()
+    setGespeichert(entwurf)
+    setZeigeGespeichert(true)
+  }
 
   return (
     <div className="space-y-6">
@@ -1525,7 +1563,10 @@ function EinstellungenView() {
         <p className="text-sm text-slate-400">Manage your account and system settings</p>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
+      <form
+        onSubmit={handleSpeichern}
+        className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20"
+      >
         <h3 className="text-base font-bold text-white">Company Profile</h3>
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
@@ -1534,7 +1575,8 @@ function EinstellungenView() {
             </label>
             <input
               type="text"
-              defaultValue="BEM Management GmbH"
+              value={entwurf.companyName}
+              onChange={(e) => handleFeldAendern('companyName', e.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
@@ -1544,7 +1586,8 @@ function EinstellungenView() {
             </label>
             <input
               type="email"
-              defaultValue="info@bem-gmbh.de"
+              value={entwurf.email}
+              onChange={(e) => handleFeldAendern('email', e.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
@@ -1554,7 +1597,8 @@ function EinstellungenView() {
             </label>
             <input
               type="text"
-              defaultValue="Berlin"
+              value={entwurf.storeHq}
+              onChange={(e) => handleFeldAendern('storeHq', e.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
@@ -1563,26 +1607,34 @@ function EinstellungenView() {
               Currency
             </label>
             <Dropdown
-              value={waehrung}
-              onChange={(v) => setWaehrung(v)}
-              options={[
-                { value: 'Euro (€)', label: 'Euro (€)' },
-                { value: 'US Dollar ($)', label: 'US Dollar ($)' },
-                { value: 'Swiss Franc (CHF)', label: 'Swiss Franc (CHF)' },
-              ]}
+              value={entwurf.waehrung}
+              onChange={(v) => handleFeldAendern('waehrung', v)}
+              options={CURRENCY_OPTIONS}
               className="w-full"
             />
           </div>
         </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <button className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10">
+        <div className="mt-6 flex items-center justify-end gap-3">
+          {zeigeGespeichert && (
+            <span className="mr-auto flex items-center gap-1.5 text-sm font-medium text-lime-400">
+              <Save className="h-4 w-4" /> Changes saved
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleAbbrechen}
+            className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+          >
             Cancel
           </button>
-          <button className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300">
+          <button
+            type="submit"
+            className="rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
+          >
             Save Changes
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
