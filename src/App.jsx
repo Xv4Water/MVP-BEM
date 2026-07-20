@@ -1055,7 +1055,7 @@ function MitarbeiterDetailView({
 /*  Show stores, and add or delete them                                      */
 /* -------------------------------------------------------------------------- */
 
-function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onAnsehen, onOpenBranchLocations }) {
+function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onAnsehen, onOpenBranchLocations, onSelectStore }) {
   const [formularOffen, setFormularOffen] = useState(false)
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
@@ -1176,7 +1176,8 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
           return (
             <div
               key={g.id}
-              className="group rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 transition hover:shadow-2xl"
+              onClick={() => onSelectStore(g.id)}
+              className="group cursor-pointer rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 transition hover:border-lime-400/30 hover:shadow-2xl"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -1192,7 +1193,10 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onAnsehen(g.id)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onAnsehen(g.id)
+                    }}
                     className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
                     aria-label={`Enter revenue for ${g.name}`}
                     title="Enter revenue"
@@ -1200,7 +1204,10 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                     <TrendingUp className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => onLoeschen(g.id)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onLoeschen(g.id)
+                    }}
                     disabled={anzahl > 0}
                     className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-transparent disabled:hover:text-slate-400"
                     aria-label={`Delete ${g.name}`}
@@ -2439,6 +2446,7 @@ export default function App() {
             onLoeschen={handleGeschaeftLoeschen}
             onAnsehen={handleGeschaeftAnsehen}
             onOpenBranchLocations={() => setBranchLocationsOpen(true)}
+            onSelectStore={(id) => setSelectedStoreId(id)}
           />
         )
       case 'geschaeft-detail':
