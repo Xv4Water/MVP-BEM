@@ -22,6 +22,7 @@ import {
   User,
   AlertCircle,
   BarChart3,
+  TrendingUp,
   ChevronDown,
 } from 'lucide-react'
 import GERMANY_MAP from './germanyMapData.json'
@@ -1349,13 +1350,21 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
 
 function StatistikView({ mitarbeiter, monatsDaten }) {
   const heute = new Date()
-  const [jahr, setJahr] = useState(heute.getFullYear())
+  const currentYear = heute.getFullYear()
+  const currentMonthIndex = heute.getMonth()
+  const [jahr, setJahr] = useState(currentYear)
 
   const jahresOptionen = useMemo(() => {
     const startJahr = heute.getFullYear() - 3
     return Array.from({ length: 6 }, (_, i) => startJahr + i)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // How many months of the selected year have already happened – the basis
+  // for the year-end run-rate forecast below. A past year is fully elapsed,
+  // a future year has no elapsed months yet.
+  const elapsedMonths =
+    jahr < currentYear ? 12 : jahr > currentYear ? 0 : currentMonthIndex + 1
 
   // Total wages paid for each month of the selected year, from the recorded
   // salary entries – falling back to each employee's base salary for months
@@ -1372,9 +1381,9 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
         return summe + gehalt
       }, 0)
 
-      return { monat: monatIndex, name, lohn }
+      return { monat: monatIndex, name, lohn, istZukunft: monatIndex >= elapsedMonths }
     })
-  }, [mitarbeiter, monatsDaten, jahr])
+  }, [mitarbeiter, monatsDaten, jahr, elapsedMonths])
 
   const jahresSumme = useMemo(
     () => monatsStatistik.reduce((summe, m) => summe + m.lohn, 0),
@@ -1382,6 +1391,23 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
   )
 
   const durchschnittProMonat = Math.round(jahresSumme / 12)
+
+  // Year-end run-rate forecast: extrapolate the average of the elapsed
+  // months across the full year. For a year with no elapsed months yet
+  // (fully in the future) there's no YTD basis, so fall back to the flat
+  // full-year estimate instead of dividing by zero.
+  const ytdSumme = monatsStatistik
+    .slice(0, elapsedMonths)
+    .reduce((summe, m) => summe + m.lohn, 0)
+  const runRate =
+    elapsedMonths > 0 ? Math.round((ytdSumme / elapsedMonths) * 12) : jahresSumme
+
+  const runRateHint =
+    jahr > currentYear
+      ? `Full-year estimate for ${jahr} (no data yet)`
+      : jahr < currentYear
+        ? `${jahr} is complete`
+        : `Run rate based on ${elapsedMonths} month${elapsedMonths === 1 ? '' : 's'} of ${jahr} YTD`
 
   const maxLohn = Math.max(...monatsStatistik.map((m) => m.lohn), 1)
 
@@ -1405,13 +1431,14 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
       </div>
 
       {/* Yearly KPIs */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           icon={Wallet}
           label={`Wages Paid ${jahr}`}
           value={formatEuro(jahresSumme)}
           hint="Sum across all employees"
           accent="bg-lime-400/10 text-lime-400"
+          variant="primary"
         />
         <KpiCard
           icon={BarChart3}
@@ -1420,39 +1447,64 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
           hint={`Average monthly wages paid in ${jahr}`}
           accent="bg-emerald-500/10 text-emerald-400"
         />
+        <KpiCard
+          icon={TrendingUp}
+          label="Year-End Forecast (Run Rate)"
+          value={formatEuro(runRate)}
+          hint={runRateHint}
+          accent="bg-purple-500/10 text-purple-400"
+          variant="primary"
+        />
       </div>
 
       {/* Monthly overview */}
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-6 py-4 font-semibold">Month</th>
-                <th className="px-6 py-4 font-semibold">Wages Paid</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {monatsStatistik.map((m) => (
-                <tr key={m.monat} className="transition-colors hover:bg-white/10">
-                  <td className="px-6 py-4 font-medium text-white">{m.name}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="w-24 shrink-0 tabular-nums text-slate-200">
-                        {formatEuro(m.lohn)}
-                      </span>
-                      <div className="h-2 w-24 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500"
-                          style={{ width: `${(m.lohn / maxLohn) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-white">Monthly Wages Paid</h3>
+            <p className="text-sm text-slate-400">
+              {jahr === currentYear
+                ? 'Solid bars are recorded so far, faded bars are projected'
+                : `Wages paid per month in ${jahr}`}
+            </p>
+          </div>
+          {jahr === currentYear && (
+            <div className="flex items-center gap-4 text-xs text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-lime-400" /> Actual
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-lime-400/30" /> Projected
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-end justify-between gap-1.5 overflow-x-auto sm:gap-3">
+          {monatsStatistik.map((m) => (
+            <div key={m.monat} className="flex min-w-[52px] flex-1 flex-col items-center">
+              <span
+                className={`mb-2 text-xs font-semibold ${m.istZukunft ? 'text-slate-500' : 'text-white'}`}
+              >
+                {formatEuro(m.lohn)}
+              </span>
+              <div className="flex h-48 w-full items-end justify-center">
+                <div
+                  className={`w-6 rounded-t-xl transition-all duration-500 sm:w-9 ${
+                    m.istZukunft
+                      ? 'bg-gradient-to-t from-lime-400/25 to-emerald-500/25'
+                      : 'bg-gradient-to-t from-lime-400 to-emerald-500'
+                  }`}
+                  style={{
+                    height: `${Math.max((m.lohn / maxLohn) * 100, 4)}%`,
+                  }}
+                />
+              </div>
+              <span className="mt-3 text-center text-xs font-medium text-slate-400">
+                {m.name.slice(0, 3)}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
