@@ -526,14 +526,17 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
     return { aktiveGeschaefte, gesamtMitarbeiter, personalkosten, teuersterMitarbeiter }
   }, [geschaefte, mitarbeiter, monatsDaten, currentYear])
 
-  // YTD payroll per branch for the bar chart (illustrative mock figures)
+  // YTD payroll per branch for the bar chart (illustrative mock figures),
+  // ranked highest cost first
   const ytdPayrollProGeschaeft = useMemo(
     () =>
-      geschaefte.map((g) => ({
-        id: g.id,
-        name: g.name,
-        betrag: getMockYtdPayroll(g.id),
-      })),
+      geschaefte
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          betrag: getMockYtdPayroll(g.id),
+        }))
+        .sort((a, b) => b.betrag - a.betrag),
     [geschaefte],
   )
   const PAYROLL_ACHSE_MAX = 150000
@@ -598,9 +601,9 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
             <p className="text-sm text-slate-500">No branches created yet.</p>
           )}
           {ytdPayrollProGeschaeft.length > 0 && (
-            <div className="flex items-end justify-between gap-3 sm:gap-6">
+            <div className="flex items-end gap-6 overflow-x-auto pb-2">
               {ytdPayrollProGeschaeft.map((d) => (
-                <div key={d.id} className="flex flex-1 flex-col items-center">
+                <div key={d.id} className="flex w-16 shrink-0 flex-col items-center sm:w-20">
                   <span className="mb-2 text-xs font-semibold text-white">
                     {formatEuro(d.betrag)}
                   </span>
