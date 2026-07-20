@@ -87,13 +87,6 @@ const formatEuro = (amount) =>
     maximumFractionDigits: 0,
   }).format(amount)
 
-// Mock annual cost figures per store, used by the Branch Locations modal.
-// Falls back to a deterministic estimate for any store beyond the four
-// seeded ones.
-const MOCK_ANNUAL_COSTS = { 1: 110000, 2: 105000, 3: 105000, 4: 110000 }
-const getMockAnnualCost = (storeId) =>
-  MOCK_ANNUAL_COSTS[storeId] ?? 100000 + ((storeId * 5000) % 30000)
-
 // Mock year-to-date payroll figures per store, used for the Dashboard's
 // "Payroll by Branches" chart. Falls back to a deterministic estimate for
 // any store beyond the four seeded ones.
@@ -777,8 +770,8 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
           <div className="mt-6 rounded-2xl bg-white/5 p-4">
             <p className="text-sm font-medium text-slate-200">Tip</p>
             <p className="mt-1 text-xs text-slate-400">
-              Open "Branch Locations" from the Stores page to view, add, or
-              manage a store's staff.
+              Click any store on the Stores page to view, add, or manage its
+              staff.
             </p>
           </div>
         </div>
@@ -1146,7 +1139,7 @@ function MitarbeiterDetailView({
 /*  Show stores, and add or delete them                                      */
 /* -------------------------------------------------------------------------- */
 
-function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onOpenBranchLocations, onSelectStore }) {
+function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onSelectStore }) {
   const [formularOffen, setFormularOffen] = useState(false)
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
@@ -1174,22 +1167,13 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
           <h2 className="text-lg font-bold text-white">Stores</h2>
           <p className="text-sm text-slate-400">{geschaefte.length} active stores</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onOpenBranchLocations}
-            className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
-          >
-            <Store className="h-4 w-4 text-lime-400" />
-            Branch Locations
-          </button>
-          <button
-            onClick={() => setFormularOffen((offen) => !offen)}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
-          >
-            <PlusCircle className="h-4 w-4" />
-            New Store
-          </button>
-        </div>
+        <button
+          onClick={() => setFormularOffen((offen) => !offen)}
+          className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+        >
+          <PlusCircle className="h-4 w-4 text-lime-400" />
+          New Store
+        </button>
       </div>
 
       {/* Form: add new store */}
@@ -1906,56 +1890,6 @@ function StoreEmployeesModal({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  BRANCH LOCATIONS MODAL                                                    */
-/*  Opened from the Stores page – a quick glass overview of every branch      */
-/*  with a mock annual cost summary; clicking a card opens that store's       */
-/*  specific detail modal (StoreEmployeesModal).                              */
-/* -------------------------------------------------------------------------- */
-
-function BranchLocationsModal({ geschaefte, onClose, onSelectStore }) {
-  return (
-    <ModalOverlay onClose={onClose} maxWidthClass="max-w-lg">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-white">Branch Locations</h2>
-          <p className="text-sm text-slate-400">Select a branch to view its details</p>
-        </div>
-        <button
-          onClick={onClose}
-          className="rounded-xl p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
-          aria-label="Close"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      <div className="space-y-3">
-        {geschaefte.length === 0 && (
-          <p className="text-sm text-slate-500">No stores created yet.</p>
-        )}
-        {geschaefte.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => onSelectStore(g.id)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-lime-400/30 hover:bg-lime-400/10"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lime-400/10 text-lime-400">
-              <Store className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="font-bold text-white">{g.name}</p>
-              <p className="text-sm text-slate-400">
-                {formatEuro(getMockAnnualCost(g.id))} Annual Costs
-              </p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </ModalOverlay>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /*  QUICK ACTION MODALS (Dashboard)                                           */
 /* -------------------------------------------------------------------------- */
 
@@ -2310,8 +2244,6 @@ export default function App() {
   const [selectedStoreId, setSelectedStoreId] = useState(null)
   // Which Dashboard "Quick Actions" modal is open: 'store' | 'employee' | 'salary' | null
   const [quickModal, setQuickModal] = useState(null)
-  // "Branch Locations" overview modal, opened from the Stores page
-  const [branchLocationsOpen, setBranchLocationsOpen] = useState(false)
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
@@ -2430,7 +2362,6 @@ export default function App() {
             mitarbeiter={mitarbeiter}
             onHinzufuegen={handleGeschaeftHinzufuegen}
             onLoeschen={handleGeschaeftLoeschen}
-            onOpenBranchLocations={() => setBranchLocationsOpen(true)}
             onSelectStore={(id) => setSelectedStoreId(id)}
           />
         )
@@ -2489,17 +2420,6 @@ export default function App() {
           onDelete={handleDelete}
           onMonatSpeichern={handleMonatSpeichern}
           onGehaltLoeschen={handleGehaltLoeschen}
-        />
-      )}
-
-      {branchLocationsOpen && (
-        <BranchLocationsModal
-          geschaefte={geschaefte}
-          onClose={() => setBranchLocationsOpen(false)}
-          onSelectStore={(id) => {
-            setSelectedStoreId(id)
-            setBranchLocationsOpen(false)
-          }}
         />
       )}
 
