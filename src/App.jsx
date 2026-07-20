@@ -1459,7 +1459,7 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
 
       {/* Monthly overview */}
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-bold text-white">Monthly Wages Paid</h3>
             <p className="text-sm text-slate-400">
@@ -2408,7 +2408,7 @@ export default function App() {
 
       {poweringUp && <PowerUpBurst />}
 
-      <div className="relative z-10">
+      <div className="relative z-40">
         <Sidebar
           activeView={activeView}
           setActiveView={setActiveView}
