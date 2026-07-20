@@ -38,26 +38,6 @@ const STORES = [
   { id: 4, name: 'Downtown Branch', city: 'Cologne', state: 'North Rhine-Westphalia' },
 ]
 
-// The 16 German federal states (Bundesländer)
-const GERMAN_STATES = [
-  'Baden-Württemberg',
-  'Bavaria',
-  'Berlin',
-  'Brandenburg',
-  'Bremen',
-  'Hamburg',
-  'Hesse',
-  'Lower Saxony',
-  'Mecklenburg-Vorpommern',
-  'North Rhine-Westphalia',
-  'Rhineland-Palatinate',
-  'Saarland',
-  'Saxony',
-  'Saxony-Anhalt',
-  'Schleswig-Holstein',
-  'Thuringia',
-]
-
 const EMPLOYEES = [
   { id: 1, firstName: 'Anna', lastName: 'Schmidt', storeId: 1, position: 'Store Manager', salary: 4200, hours: 40 },
   { id: 2, firstName: 'Lukas', lastName: 'Müller', storeId: 1, position: 'Sales Associate', salary: 2800, hours: 38 },
@@ -1049,20 +1029,20 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
   const [formularOffen, setFormularOffen] = useState(false)
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
-  const [bundesland, setBundesland] = useState(GERMAN_STATES[0])
+  const [bundesland, setBundesland] = useState('')
   const [pendingDelete, setPendingDelete] = useState(null)
 
   const handleAbbrechen = () => {
     setFormularOffen(false)
     setName('')
     setStadt('')
-    setBundesland(GERMAN_STATES[0])
+    setBundesland('')
   }
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (!name.trim() || !stadt.trim() || !bundesland) return
-    onHinzufuegen(name.trim(), stadt.trim(), bundesland)
+    if (!name.trim() || !stadt.trim() || !bundesland.trim()) return
+    onHinzufuegen(name.trim(), stadt.trim(), bundesland.trim())
     handleAbbrechen()
   }
 
@@ -1120,11 +1100,13 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
                 State
               </label>
-              <Dropdown
+              <input
+                type="text"
                 value={bundesland}
-                onChange={(v) => setBundesland(v)}
-                options={GERMAN_STATES.map((s) => ({ value: s, label: s }))}
-                className="w-full"
+                onChange={(e) => setBundesland(e.target.value)}
+                placeholder="e.g. Bavaria"
+                required
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
               />
             </div>
           </div>
@@ -1802,12 +1784,12 @@ function StoreEmployeesModal({
 function NewStoreModal({ onClose, onHinzufuegen }) {
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
-  const [bundesland, setBundesland] = useState(GERMAN_STATES[0])
+  const [bundesland, setBundesland] = useState('')
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (!name.trim() || !stadt.trim() || !bundesland) return
-    onHinzufuegen(name.trim(), stadt.trim(), bundesland)
+    if (!name.trim() || !stadt.trim() || !bundesland.trim()) return
+    onHinzufuegen(name.trim(), stadt.trim(), bundesland.trim())
     onClose()
   }
 
@@ -1849,11 +1831,13 @@ function NewStoreModal({ onClose, onHinzufuegen }) {
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-200">State</label>
-          <Dropdown
+          <input
+            type="text"
             value={bundesland}
-            onChange={(v) => setBundesland(v)}
-            options={GERMAN_STATES.map((s) => ({ value: s, label: s }))}
-            className="w-full"
+            onChange={(e) => setBundesland(e.target.value)}
+            placeholder="e.g. Bavaria"
+            required
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
           />
         </div>
         <div className="flex justify-end gap-3 pt-1">
