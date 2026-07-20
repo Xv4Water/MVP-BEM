@@ -22,7 +22,6 @@ import {
   User,
   AlertCircle,
   BarChart3,
-  TrendingUp,
   ChevronDown,
 } from 'lucide-react'
 import GERMANY_MAP from './germanyMapData.json'
@@ -393,9 +392,7 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
         {/* Navigation */}
         <nav className="flex flex-col items-center gap-2">
           {NAV_LINKS.map(({ key, label, icon: Icon }) => {
-            const isActive =
-              activeView === key ||
-              (key === 'geschaefte' && activeView === 'geschaeft-detail')
+            const isActive = activeView === key
             return (
               <button
                 key={key}
@@ -1148,7 +1145,7 @@ function MitarbeiterDetailView({
 /*  Show stores, and add or delete them                                      */
 /* -------------------------------------------------------------------------- */
 
-function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onAnsehen, onOpenBranchLocations, onSelectStore }) {
+function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, onOpenBranchLocations, onSelectStore }) {
   const [formularOffen, setFormularOffen] = useState(false)
   const [name, setName] = useState('')
   const [stadt, setStadt] = useState('')
@@ -1282,17 +1279,6 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
                   <button
                     onClick={(event) => {
                       event.stopPropagation()
-                      onAnsehen(g.id)
-                    }}
-                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
-                    aria-label={`Enter revenue for ${g.name}`}
-                    title="Enter revenue"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation()
                       onLoeschen(g.id)
                     }}
                     disabled={anzahl > 0}
@@ -1327,193 +1313,8 @@ function GeschaefteView({ geschaefte, mitarbeiter, onHinzufuegen, onLoeschen, on
 }
 
 /* -------------------------------------------------------------------------- */
-/*  STORE DETAIL VIEW                                                        */
-/*  Select month/year and enter revenue for it                               */
-/* -------------------------------------------------------------------------- */
-
-function GeschaeftDetailView({ geschaeft, mitarbeiterAnzahl, eintraege, onSpeichern, onLoeschen, onZurueck }) {
-  const heute = new Date()
-  const [jahr, setJahr] = useState(heute.getFullYear())
-  const [monat, setMonat] = useState(heute.getMonth())
-  const [umsatzInput, setUmsatzInput] = useState('')
-  const [gespeichertHinweis, setGespeichertHinweis] = useState(false)
-
-  // When month/year changes, prefill the field with an existing entry –
-  // otherwise leave it empty.
-  useEffect(() => {
-    const bestehenderEintrag = eintraege.find(
-      (e) => e.jahr === jahr && e.monat === monat,
-    )
-    setUmsatzInput(bestehenderEintrag ? String(bestehenderEintrag.umsatz) : '')
-    setGespeichertHinweis(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jahr, monat])
-
-  // Automatically hide the confirmation message after saving
-  useEffect(() => {
-    if (!gespeichertHinweis) return
-    const timer = setTimeout(() => setGespeichertHinweis(false), 2500)
-    return () => clearTimeout(timer)
-  }, [gespeichertHinweis])
-
-  const jahresOptionen = useMemo(() => {
-    const startJahr = heute.getFullYear() - 2
-    return Array.from({ length: 5 }, (_, i) => startJahr + i)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const verlaufSortiert = useMemo(
-    () =>
-      [...eintraege].sort((a, b) => b.jahr - a.jahr || b.monat - a.monat),
-    [eintraege],
-  )
-
-  const handleSpeichern = (event) => {
-    event.preventDefault()
-    if (umsatzInput === '') return
-    onSpeichern(geschaeft.id, jahr, monat, Number(umsatzInput))
-    setGespeichertHinweis(true)
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Back button + store header */}
-      <div>
-        <button
-          onClick={onZurueck}
-          className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-lime-400"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Stores
-        </button>
-
-        <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400/10 text-lime-400">
-            <Store className="h-7 w-7" />
-          </div>
-          <div className="mr-auto">
-            <h2 className="text-lg font-bold text-white">{geschaeft.name}</h2>
-            <p className="text-sm text-slate-400">
-              {geschaeft.city} · {geschaeft.state}
-            </p>
-          </div>
-          <div className="text-sm">
-            <p className="text-slate-500">Employees</p>
-            <p className="font-semibold text-white">{mitarbeiterAnzahl}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Form: enter revenue */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
-          <h3 className="text-base font-bold text-white">Enter Revenue</h3>
-          <p className="text-sm text-slate-400">
-            Select a calendar month and year to enter revenue.
-          </p>
-
-          <form onSubmit={handleSpeichern} className="mt-5 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                  Month
-                </label>
-                <Dropdown
-                  value={monat}
-                  onChange={(v) => setMonat(Number(v))}
-                  options={MONTHS.map((name, index) => ({ value: index, label: name }))}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                  Year
-                </label>
-                <Dropdown
-                  value={jahr}
-                  onChange={(v) => setJahr(Number(v))}
-                  options={jahresOptionen.map((j) => ({ value: j, label: String(j) }))}
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Revenue (€)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="100"
-                required
-                value={umsatzInput}
-                onChange={(e) => setUmsatzInput(e.target.value)}
-                placeholder="e.g. 24000"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
-              />
-            </div>
-
-            <div className="flex items-center gap-3 pt-1">
-              <button
-                type="submit"
-                className="flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-400/30 transition hover:bg-lime-300"
-              >
-                <Save className="h-4 w-4" />
-                Save Entry
-              </button>
-              {gespeichertHinweis && (
-                <span className="text-sm font-medium text-emerald-400">
-                  ✓ Saved for {MONTHS[monat]} {jahr}
-                </span>
-              )}
-            </div>
-          </form>
-        </div>
-
-        {/* Recorded revenue history */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
-          <h3 className="text-base font-bold text-white">Recorded Revenue</h3>
-          <p className="text-sm text-slate-400">History for {geschaeft.name}</p>
-
-          <div className="mt-5 space-y-3">
-            {verlaufSortiert.length === 0 && (
-              <p className="rounded-2xl bg-white/5 px-4 py-6 text-center text-sm text-slate-500">
-                No revenue recorded yet.
-              </p>
-            )}
-
-            {verlaufSortiert.map((e) => (
-              <div
-                key={`${e.jahr}-${e.monat}`}
-                className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-white">
-                    {MONTHS[e.monat]} {e.jahr}
-                  </p>
-                  <p className="text-xs text-slate-400">{formatEuro(e.umsatz)}</p>
-                </div>
-                <button
-                  onClick={() => onLoeschen(geschaeft.id, e.jahr, e.monat)}
-                  className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400"
-                  aria-label={`Delete entry for ${MONTHS[e.monat]} ${e.jahr}`}
-                  title="Delete entry"
-                >
-                  <Trash className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /*  STATISTICS VIEW                                                          */
-/*  Revenue by year and month                                                */
+/*  Payroll by year and month                                                */
 /* -------------------------------------------------------------------------- */
 
 function StatistikView({ mitarbeiter, monatsDaten }) {
@@ -2372,7 +2173,6 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mitarbeiter, setMitarbeiter] = useState(EMPLOYEES)
   const [geschaefte, setGeschaefte] = useState(STORES)
-  const [selectedGeschaeftId, setSelectedGeschaeftId] = useState(null)
   const [selectedStoreId, setSelectedStoreId] = useState(null)
   // Which Dashboard "Quick Actions" modal is open: 'store' | 'employee' | 'salary' | null
   const [quickModal, setQuickModal] = useState(null)
@@ -2381,9 +2181,6 @@ export default function App() {
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
-
-  // Revenue data per store: { [storeId]: [{ jahr, monat, umsatz }] }
-  const [umsatzDaten, setUmsatzDaten] = useState({})
 
   const handleAbmelden = () => {
     setIstAngemeldet(false)
@@ -2433,35 +2230,6 @@ export default function App() {
     setGeschaefte((prev) => prev.filter((g) => g.id !== id))
   }
 
-  const handleGeschaeftAnsehen = (id) => {
-    setSelectedGeschaeftId(id)
-    setActiveView('geschaeft-detail')
-  }
-
-  // Save a revenue entry for a store, or update it if one already exists
-  // for that month/year
-  const handleUmsatzSpeichern = (geschaeftId, jahr, monat, umsatz) => {
-    setUmsatzDaten((prev) => {
-      const bestehendeEintraege = prev[geschaeftId] ?? []
-      const ohneAktuellenMonat = bestehendeEintraege.filter(
-        (e) => !(e.jahr === jahr && e.monat === monat),
-      )
-      return {
-        ...prev,
-        [geschaeftId]: [...ohneAktuellenMonat, { jahr, monat, umsatz }],
-      }
-    })
-  }
-
-  const handleUmsatzLoeschen = (geschaeftId, jahr, monat) => {
-    setUmsatzDaten((prev) => ({
-      ...prev,
-      [geschaeftId]: (prev[geschaeftId] ?? []).filter(
-        (e) => !(e.jahr === jahr && e.monat === monat),
-      ),
-    }))
-  }
-
   // Save a monthly entry (up to four salary payments + hours worked) for
   // an employee, or update it if one already exists for that month/year
   const handleMonatSpeichern = (mitarbeiterId, jahr, monat, gehaelter, stunden) => {
@@ -2491,15 +2259,11 @@ export default function App() {
     }))
   }
 
-  const selectedGeschaeft = geschaefte.find((g) => g.id === selectedGeschaeftId)
   const selectedStore = geschaefte.find((g) => g.id === selectedStoreId)
 
   // Which Bundesland the background map should zoom into: the store whose
-  // employee modal is open, or the store whose revenue detail page is open.
-  const mapSelectedState =
-    selectedStore?.state ??
-    (activeView === 'geschaeft-detail' ? selectedGeschaeft?.state : null) ??
-    null
+  // employee modal is open.
+  const mapSelectedState = selectedStore?.state ?? null
 
   const renderView = () => {
     switch (activeView) {
@@ -2519,26 +2283,8 @@ export default function App() {
             mitarbeiter={mitarbeiter}
             onHinzufuegen={handleGeschaeftHinzufuegen}
             onLoeschen={handleGeschaeftLoeschen}
-            onAnsehen={handleGeschaeftAnsehen}
             onOpenBranchLocations={() => setBranchLocationsOpen(true)}
             onSelectStore={(id) => setSelectedStoreId(id)}
-          />
-        )
-      case 'geschaeft-detail':
-        if (!selectedGeschaeft) {
-          setActiveView('geschaefte')
-          return null
-        }
-        return (
-          <GeschaeftDetailView
-            geschaeft={selectedGeschaeft}
-            mitarbeiterAnzahl={
-              mitarbeiter.filter((m) => m.storeId === selectedGeschaeft.id).length
-            }
-            eintraege={umsatzDaten[selectedGeschaeft.id] ?? []}
-            onSpeichern={handleUmsatzSpeichern}
-            onLoeschen={handleUmsatzLoeschen}
-            onZurueck={() => setActiveView('geschaefte')}
           />
         )
       case 'statistik':
@@ -2555,10 +2301,7 @@ export default function App() {
     }
   }
 
-  const headerTitel =
-    activeView === 'geschaeft-detail' && selectedGeschaeft
-      ? selectedGeschaeft.name
-      : VIEW_TITEL[activeView]
+  const headerTitel = VIEW_TITEL[activeView]
 
   return (
     <div className="relative isolate flex h-screen items-stretch overflow-hidden bg-slate-950">
