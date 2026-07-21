@@ -158,8 +158,8 @@ const LOGIN_CREDENTIALS = {
 /* -------------------------------------------------------------------------- */
 
 function LoginView({ onLogin }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState(LOGIN_CREDENTIALS.username)
+  const [password, setPassword] = useState(LOGIN_CREDENTIALS.password)
   const [error, setError] = useState('')
 
   const handleSubmit = (event) => {
