@@ -23,6 +23,9 @@ Built with **React**, **Tailwind CSS** and **lucide-react**.
   four salary payments and hours worked per month, plus a salary history
   chart)
 - **Statistics** – yearly/monthly payroll overview with a year picker
+- **History** – automatic log of recent changes (branches, employees, and
+  salary entries), summarized in three KPI cards; clicking an entry jumps
+  straight to that item in its relevant area
 - **Settings** – form for the company profile
 - **Layout** – floating icon-only navigation rail + a bordered glass panel
   containing the header (search bar, current date, profile) and page content
