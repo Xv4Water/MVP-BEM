@@ -24,8 +24,10 @@ Built with **React**, **Tailwind CSS** and **lucide-react**.
   chart)
 - **Statistics** – yearly/monthly payroll overview with a year picker
 - **History** – automatic log of recent changes (branches, employees, and
-  salary entries), summarized in three KPI cards; clicking an entry jumps
-  straight to that item in its relevant area
+  salary entries), summarized in three KPI cards, kept for up to 7 days.
+  Clicking an entry jumps straight to that item in its relevant area; a
+  "Restore" button on each entry reverses that specific change (recreating
+  what was deleted, undoing what was added, or reverting a salary edit)
 - **Settings** – form for the company profile
 - **Layout** – floating icon-only navigation rail + a bordered glass panel
   containing the header (search bar, current date, profile) and page content
