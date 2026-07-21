@@ -96,6 +96,24 @@ const useFormatMoney = () => {
   return (amount) => formatCurrency(amount, waehrung)
 }
 
+// An employee's most recently recorded monthly salary (sum of that
+// month's up-to-four payments), falling back to their base salary if no
+// monthly entry has been recorded yet. Shared by the branch employee list
+// and the header search so both agree on "current amount".
+const getAktuellenBetrag = (mitarbeiterId, monatsDaten, basisGehalt) => {
+  const eintraege = monatsDaten[mitarbeiterId] ?? []
+  const letzterEintrag = eintraege.reduce((neuester, e) => {
+    if (!neuester) return e
+    if (e.jahr > neuester.jahr || (e.jahr === neuester.jahr && e.monat > neuester.monat)) {
+      return e
+    }
+    return neuester
+  }, null)
+  return letzterEintrag
+    ? letzterEintrag.gehaelter.reduce((summe, g) => summe + g, 0)
+    : basisGehalt
+}
+
 // Mock year-to-date payroll figures per branch, used for the Dashboard's
 // "Payroll by Branches" chart. Falls back to a deterministic estimate for
 // any branch beyond the four seeded ones.
@@ -436,7 +454,61 @@ function Dropdown({ value, onChange, options, className = '', buttonClassName = 
 /*  HEADER                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function Header({ title, onMenuClick, onLogout }) {
+function Header({
+  title,
+  onMenuClick,
+  onLogout,
+  searchQuery = '',
+  onSearchChange = () => {},
+  searchResults = [],
+  onSelectSearchResult = () => {},
+}) {
+  const formatMoney = useFormatMoney()
+  const [searchOffen, setSearchOffen] = useState(false)
+  const [rect, setRect] = useState(null)
+  const inputRef = useRef(null)
+  const panelRef = useRef(null)
+
+  // The result list is portaled to <body> and fixed-positioned against the
+  // input's rect, matching the Dropdown component's approach so it can
+  // float above the header's rounded, overflow-hidden container.
+  useEffect(() => {
+    if (!searchOffen) return
+    const updateRect = () => {
+      if (inputRef.current) setRect(inputRef.current.getBoundingClientRect())
+    }
+    updateRect()
+    window.addEventListener('scroll', updateRect, true)
+    window.addEventListener('resize', updateRect)
+    return () => {
+      window.removeEventListener('scroll', updateRect, true)
+      window.removeEventListener('resize', updateRect)
+    }
+  }, [searchOffen])
+
+  useEffect(() => {
+    const handleClickAway = (event) => {
+      if (
+        inputRef.current &&
+        !inputRef.current.contains(event.target) &&
+        !(panelRef.current && panelRef.current.contains(event.target))
+      ) {
+        setSearchOffen(false)
+      }
+    }
+    const handleKey = (event) => {
+      if (event.key === 'Escape') setSearchOffen(false)
+    }
+    document.addEventListener('mousedown', handleClickAway)
+    window.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClickAway)
+      window.removeEventListener('keydown', handleKey)
+    }
+  }, [])
+
+  const zeigeErgebnisse = searchOffen && searchQuery.trim().length > 0
+
   return (
     <header className="flex shrink-0 items-center gap-4 border-b border-white/10 px-4 py-4 md:px-8">
       {/* Menu button (mobile) */}
@@ -457,11 +529,53 @@ function Header({ title, onMenuClick, onLogout }) {
       <div className="relative ml-auto w-full max-w-xs">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
         <input
+          ref={inputRef}
           type="text"
-          placeholder="Search …"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          onFocus={() => setSearchOffen(true)}
+          placeholder="Search employees or amounts…"
           className="w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
         />
       </div>
+
+      {zeigeErgebnisse &&
+        rect &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{ position: 'fixed', top: rect.bottom + 8, left: rect.left, width: rect.width }}
+            className="z-[100] max-h-80 overflow-y-auto rounded-2xl border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-2xl"
+          >
+            {searchResults.length === 0 ? (
+              <p className="px-3 py-4 text-center text-sm text-slate-500">No matches found.</p>
+            ) : (
+              searchResults.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => {
+                    onSelectSearchResult(r.id, r.storeId)
+                    setSearchOffen(false)
+                  }}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-white/10"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">
+                      {r.firstName} {r.lastName}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {r.position} · {r.branchName}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-lime-400">
+                    {formatMoney(r.amount)}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>,
+          document.body,
+        )}
 
       {/* Notifications */}
       <button className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-2.5 text-slate-300 transition hover:bg-white/10">
@@ -1595,6 +1709,7 @@ function StoreEmployeesModal({
   onDelete,
   onMonatSpeichern,
   onGehaltLoeschen,
+  initialSelectedEmployeeId = null,
 }) {
   const formatMoney = useFormatMoney()
   const [formularOffen, setFormularOffen] = useState(false)
@@ -1603,7 +1718,7 @@ function StoreEmployeesModal({
   const [position, setPosition] = useState('')
   const [salary, setSalary] = useState('')
   const [hours, setHours] = useState('')
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(initialSelectedEmployeeId)
 
   const storeEmployees = mitarbeiter.filter((m) => m.storeId === store.id)
   const selectedEmployee = storeEmployees.find((m) => m.id === selectedEmployeeId)
@@ -1765,20 +1880,7 @@ function StoreEmployeesModal({
 
             <div className="mt-5 divide-y divide-white/5">
               {storeEmployees.map((m) => {
-                const eintraege = monatsDaten[m.id] ?? []
-                const letzterEintrag = eintraege.reduce((neuester, e) => {
-                  if (!neuester) return e
-                  if (
-                    e.jahr > neuester.jahr ||
-                    (e.jahr === neuester.jahr && e.monat > neuester.monat)
-                  ) {
-                    return e
-                  }
-                  return neuester
-                }, null)
-                const betrag = letzterEintrag
-                  ? letzterEintrag.gehaelter.reduce((summe, g) => summe + g, 0)
-                  : m.salary
+                const betrag = getAktuellenBetrag(m.id, monatsDaten, m.salary)
 
                 return (
                   <button
@@ -2193,12 +2295,66 @@ export default function App() {
   const [mitarbeiter, setMitarbeiter] = useState(EMPLOYEES)
   const [geschaefte, setGeschaefte] = useState(STORES)
   const [selectedStoreId, setSelectedStoreId] = useState(null)
+  // Employee to jump straight to when a branch modal is opened via the
+  // header search (rather than by clicking a branch card)
+  const [pendingEmployeeId, setPendingEmployeeId] = useState(null)
   // Which Dashboard "Quick Actions" modal is open: 'store' | 'employee' | 'salary' | null
   const [quickModal, setQuickModal] = useState(null)
   const [einstellungen, setEinstellungen] = useState(ladeGespeicherteEinstellungen)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
+
+  // Header search: matches employees by name, position, branch, or their
+  // current salary amount (as a plain number or in the selected currency),
+  // so switching currency also updates which amounts a search finds.
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) return []
+    return mitarbeiter
+      .map((m) => {
+        const branch = geschaefte.find((g) => g.id === m.storeId)
+        const amount = getAktuellenBetrag(m.id, monatsDaten, m.salary)
+        return {
+          id: m.id,
+          storeId: m.storeId,
+          firstName: m.firstName,
+          lastName: m.lastName,
+          position: m.position,
+          branchName: branch?.name ?? '',
+          amount,
+        }
+      })
+      .filter((r) => {
+        const vollerName = `${r.firstName} ${r.lastName}`.toLowerCase()
+        // Match against the amount as displayed (converted to the selected
+        // currency) as well as the raw Euro figure, so a search works
+        // whether typed with thousands separators, without them, or in
+        // whichever currency is currently active.
+        const kurs = EXCHANGE_RATES_ZU_EURO[einstellungen.waehrung] ?? 1
+        const umgerechnet = Math.round(r.amount * kurs)
+        const formattedAmount = formatCurrency(r.amount, einstellungen.waehrung).toLowerCase()
+        return (
+          vollerName.includes(query) ||
+          r.position.toLowerCase().includes(query) ||
+          r.branchName.toLowerCase().includes(query) ||
+          String(r.amount).includes(query) ||
+          String(umgerechnet).includes(query) ||
+          formattedAmount.includes(query)
+        )
+      })
+      .slice(0, 8)
+  }, [searchQuery, mitarbeiter, geschaefte, monatsDaten, einstellungen.waehrung])
+
+  // Jump to an employee found via search: open their branch's modal
+  // straight on their detail view.
+  const handleSelectSearchResult = (mitarbeiterId, storeId) => {
+    setActiveView('geschaefte')
+    setSelectedStoreId(storeId)
+    setPendingEmployeeId(mitarbeiterId)
+    setSearchQuery('')
+  }
 
   const handleAbmelden = () => {
     setIstAngemeldet(false)
@@ -2271,6 +2427,7 @@ export default function App() {
       return next
     })
     setSelectedStoreId((prev) => (prev === id ? null : prev))
+    setPendingEmployeeId((prev) => (entfernteMitarbeiterIds.includes(prev) ? null : prev))
   }
 
   // Save a monthly entry (up to four salary payments + hours worked) for
@@ -2322,7 +2479,10 @@ export default function App() {
             mitarbeiter={mitarbeiter}
             onHinzufuegen={handleGeschaeftHinzufuegen}
             onLoeschen={handleGeschaeftLoeschen}
-            onSelectStore={(id) => setSelectedStoreId(id)}
+            onSelectStore={(id) => {
+              setSelectedStoreId(id)
+              setPendingEmployeeId(null)
+            }}
           />
         )
       case 'statistik':
@@ -2365,6 +2525,10 @@ export default function App() {
           title={headerTitel}
           onMenuClick={() => setMobileOpen(true)}
           onLogout={handleAbmelden}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchResults={searchResults}
+          onSelectSearchResult={handleSelectSearchResult}
         />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">{renderView()}</main>
@@ -2372,14 +2536,19 @@ export default function App() {
 
       {selectedStore && (
         <StoreEmployeesModal
+          key={`${selectedStore.id}-${pendingEmployeeId ?? 'none'}`}
           store={selectedStore}
           mitarbeiter={mitarbeiter}
           monatsDaten={monatsDaten}
-          onClose={() => setSelectedStoreId(null)}
+          onClose={() => {
+            setSelectedStoreId(null)
+            setPendingEmployeeId(null)
+          }}
           onHinzufuegen={handleMitarbeiterHinzufuegen}
           onDelete={handleDelete}
           onMonatSpeichern={handleMonatSpeichern}
           onGehaltLoeschen={handleGehaltLoeschen}
+          initialSelectedEmployeeId={pendingEmployeeId}
         />
       )}
 
