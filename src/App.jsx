@@ -858,7 +858,7 @@ function GehaltVerlaufChart({ mitarbeiter, eintraege, jahr }) {
         {/* Y axis */}
         <div className="flex h-56 flex-col justify-between text-right text-xs tabular-nums text-slate-500">
           {GEHALT_Y_SCHRITTE.map((wert) => (
-            <span key={wert}>€{wert.toLocaleString('en-GB')}</span>
+            <span key={wert}>{formatMoney(wert)}</span>
           ))}
         </div>
 
