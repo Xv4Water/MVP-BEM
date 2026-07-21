@@ -66,11 +66,26 @@ const CURRENCY_OPTIONS = [
   { value: 'Ghanaian Cedi (₵)', label: 'Ghanaian Cedi (₵)', symbol: '₵' },
 ]
 
-// Format an amount with the given currency's symbol (e.g. €4,200) – falls
-// back to Euro if the currency isn't recognized.
-const formatCurrency = (amount, waehrung) => {
-  const symbol = CURRENCY_OPTIONS.find((c) => c.value === waehrung)?.symbol ?? '€'
-  return `${symbol}${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount)}`
+// Static example exchange rates relative to Euro (the currency all mock
+// figures in this app are stored/entered in). These are illustrative
+// fixed rates, not live market data – swapping in a real FX API would
+// only require changing this table.
+const EXCHANGE_RATES_ZU_EURO = {
+  'Euro (€)': 1,
+  'US Dollar ($)': 1.08,
+  'Swiss Franc (CHF)': 0.94,
+  'Ghanaian Cedi (₵)': 15.5,
+}
+
+// Format a Euro-denominated amount in the given currency (e.g. €4,200) –
+// converts using EXCHANGE_RATES_ZU_EURO first, then falls back to Euro if
+// the currency isn't recognized.
+const formatCurrency = (amountInEuro, waehrung) => {
+  const meta = CURRENCY_OPTIONS.find((c) => c.value === waehrung)
+  const symbol = meta?.symbol ?? '€'
+  const kurs = EXCHANGE_RATES_ZU_EURO[waehrung] ?? 1
+  const umgerechneterBetrag = amountInEuro * kurs
+  return `${symbol}${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(umgerechneterBetrag)}`
 }
 
 // Provides the app-wide selected currency (set in Settings) to every
