@@ -309,9 +309,9 @@ function Sidebar({ activeView, setActiveView, mobileOpen, setMobileOpen }) {
         {/* User avatar at the bottom */}
         <div
           className="mt-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-xs font-bold text-white"
-          title="Michael Krause · Management"
+          title="Ben · Administrator"
         >
-          MK
+          B
         </div>
       </aside>
     </>
@@ -453,17 +453,6 @@ function Header({ title, onMenuClick, onLogout }) {
         <Bell className="h-5 w-5" />
         <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
       </button>
-
-      {/* Profile placeholder */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 text-sm font-bold text-white">
-          MK
-        </div>
-        <div className="hidden text-sm lg:block">
-          <p className="font-semibold text-white">Michael Krause</p>
-          <p className="text-xs text-slate-400">Administrator</p>
-        </div>
-      </div>
 
       {/* Sign out */}
       <button
