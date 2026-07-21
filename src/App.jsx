@@ -24,6 +24,7 @@ import {
   BarChart3,
   TrendingUp,
   ChevronDown,
+  History,
 } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
@@ -174,6 +175,7 @@ const NAV_LINKS = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'geschaefte', label: 'Branches', icon: Store },
   { key: 'statistik', label: 'Statistics', icon: BarChart3 },
+  { key: 'verlauf', label: 'History', icon: History },
   { key: 'einstellungen', label: 'Settings', icon: Settings },
 ]
 
@@ -1534,6 +1536,85 @@ function StatistikView({ mitarbeiter, monatsDaten }) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  HISTORY VIEW                                                             */
+/* -------------------------------------------------------------------------- */
+
+const AENDERUNGSKATEGORIEN = {
+  branch: { label: 'Branches', icon: Store, accent: 'bg-lime-400/10 text-lime-400' },
+  employee: { label: 'Employees', icon: Users, accent: 'bg-sky-400/10 text-sky-400' },
+  salary: { label: 'Salary', icon: Wallet, accent: 'bg-amber-400/10 text-amber-400' },
+}
+
+const formatVerlaufZeitpunkt = (zeitstempel) => {
+  const datum = new Date(zeitstempel)
+  return `${datum.toLocaleDateString('en-GB')} · ${datum.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`
+}
+
+function VerlaufView({ aenderungen, onOeffnen }) {
+  const anzahlProKategorie = useMemo(() => {
+    return aenderungen.reduce(
+      (zaehler, a) => {
+        zaehler[a.kategorie] = (zaehler[a.kategorie] ?? 0) + 1
+        return zaehler
+      },
+      { branch: 0, employee: 0, salary: 0 },
+    )
+  }, [aenderungen])
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {Object.entries(AENDERUNGSKATEGORIEN).map(([kategorie, meta]) => (
+          <KpiCard
+            key={kategorie}
+            icon={meta.icon}
+            label={`${meta.label} Changes`}
+            value={anzahlProKategorie[kategorie] ?? 0}
+            accent={meta.accent}
+          />
+        ))}
+      </div>
+
+      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-xl backdrop-blur-2xl md:p-6">
+        <h2 className="mb-4 text-lg font-bold text-white">Recent Changes</h2>
+        <div className="divide-y divide-white/5">
+          {aenderungen.map((a) => {
+            const meta = AENDERUNGSKATEGORIEN[a.kategorie]
+            const Icon = meta.icon
+            return (
+              <button
+                key={a.id}
+                onClick={() => onOeffnen(a)}
+                className="flex w-full items-center gap-4 rounded-2xl px-2 py-3.5 text-left transition-colors hover:bg-white/5"
+              >
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${meta.accent}`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-white">{a.text}</p>
+                  <p className="text-xs text-slate-500">{formatVerlaufZeitpunkt(a.zeitpunkt)}</p>
+                </div>
+              </button>
+            )
+          })}
+
+          {aenderungen.length === 0 && (
+            <p className="rounded-xl bg-white/5 px-4 py-8 text-center text-sm text-slate-500">
+              No changes recorded yet.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  SETTINGS VIEW                                                            */
 /* -------------------------------------------------------------------------- */
 
@@ -2284,6 +2365,7 @@ const VIEW_TITEL = {
   dashboard: 'Dashboard',
   geschaefte: 'Branches',
   statistik: 'Statistics',
+  verlauf: 'History',
   einstellungen: 'Settings',
 }
 
@@ -2302,6 +2384,27 @@ export default function App() {
   const [quickModal, setQuickModal] = useState(null)
   const [einstellungen, setEinstellungen] = useState(ladeGespeicherteEinstellungen)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Log of recent changes shown on the History page, newest first
+  const [aenderungen, setAenderungen] = useState([])
+  const naechsteAenderungId = useRef(1)
+
+  // Record a change for the History page. Keeps only the most recent 50
+  // entries so the log doesn't grow unbounded over a long session.
+  const protokolliereAenderung = (kategorie, text, navigationsziel) => {
+    setAenderungen((prev) =>
+      [
+        {
+          id: naechsteAenderungId.current++,
+          kategorie,
+          text,
+          navigationsziel,
+          zeitpunkt: Date.now(),
+        },
+        ...prev,
+      ].slice(0, 50),
+    )
+  }
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
@@ -2392,13 +2495,26 @@ export default function App() {
 
   // Remove an employee from state
   const handleDelete = (id) => {
+    const entfernterMitarbeiter = mitarbeiter.find((m) => m.id === id)
     setMitarbeiter((prev) => prev.filter((m) => m.id !== id))
+    if (entfernterMitarbeiter) {
+      protokolliereAenderung(
+        'employee',
+        `Employee removed: ${entfernterMitarbeiter.firstName} ${entfernterMitarbeiter.lastName}`,
+        { storeId: entfernterMitarbeiter.storeId },
+      )
+    }
   }
 
   // Add a new employee
   const handleMitarbeiterHinzufuegen = (daten) => {
     setMitarbeiter((prev) => {
       const neueId = Math.max(0, ...prev.map((m) => m.id)) + 1
+      protokolliereAenderung(
+        'employee',
+        `New employee added: ${daten.firstName} ${daten.lastName}`,
+        { storeId: daten.storeId, mitarbeiterId: neueId },
+      )
       return [...prev, { id: neueId, ...daten }]
     })
   }
@@ -2407,12 +2523,14 @@ export default function App() {
   const handleGeschaeftHinzufuegen = (name, city, state) => {
     setGeschaefte((prev) => {
       const neueId = Math.max(0, ...prev.map((g) => g.id)) + 1
+      protokolliereAenderung('branch', `New branch added: ${name}`, { storeId: neueId })
       return [...prev, { id: neueId, name, city, state }]
     })
   }
 
   // Remove a branch, along with its employees and their recorded monthly data
   const handleGeschaeftLoeschen = (id) => {
+    const entferntesGeschaeft = geschaefte.find((g) => g.id === id)
     const entfernteMitarbeiterIds = mitarbeiter
       .filter((m) => m.storeId === id)
       .map((m) => m.id)
@@ -2428,6 +2546,9 @@ export default function App() {
     })
     setSelectedStoreId((prev) => (prev === id ? null : prev))
     setPendingEmployeeId((prev) => (entfernteMitarbeiterIds.includes(prev) ? null : prev))
+    if (entferntesGeschaeft) {
+      protokolliereAenderung('branch', `Branch removed: ${entferntesGeschaeft.name}`, null)
+    }
   }
 
   // Save a monthly entry (up to four salary payments + hours worked) for
@@ -2443,6 +2564,15 @@ export default function App() {
         [mitarbeiterId]: [...ohneAktuellenMonat, { jahr, monat, gehaelter, stunden }],
       }
     })
+    const betroffenerMitarbeiter = mitarbeiter.find((m) => m.id === mitarbeiterId)
+    if (betroffenerMitarbeiter) {
+      const gesamtbetrag = gehaelter.reduce((summe, g) => summe + g, 0)
+      protokolliereAenderung(
+        'salary',
+        `Salary recorded for ${betroffenerMitarbeiter.firstName} ${betroffenerMitarbeiter.lastName}: ${formatCurrency(gesamtbetrag, einstellungen.waehrung)} (${MONTHS[monat]} ${jahr})`,
+        { storeId: betroffenerMitarbeiter.storeId, mitarbeiterId },
+      )
+    }
   }
 
   // Remove a single salary payment from a monthly entry – if that empties
@@ -2460,6 +2590,15 @@ export default function App() {
   }
 
   const selectedStore = geschaefte.find((g) => g.id === selectedStoreId)
+
+  // Open a History entry in its relevant area: employee/salary changes jump
+  // straight to that employee's detail view; branch changes open the
+  // branch's employee list (or just the Branches overview if it was deleted).
+  const handleOeffneAenderung = (aenderung) => {
+    setActiveView('geschaefte')
+    setSelectedStoreId(aenderung.navigationsziel?.storeId ?? null)
+    setPendingEmployeeId(aenderung.navigationsziel?.mitarbeiterId ?? null)
+  }
 
   const renderView = () => {
     switch (activeView) {
@@ -2492,6 +2631,8 @@ export default function App() {
             monatsDaten={monatsDaten}
           />
         )
+      case 'verlauf':
+        return <VerlaufView aenderungen={aenderungen} onOeffnen={handleOeffneAenderung} />
       case 'einstellungen':
         return (
           <EinstellungenView
