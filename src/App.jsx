@@ -1415,6 +1415,21 @@ const EINSTELLUNGEN_DEFAULT = {
   waehrung: 'Euro (€)',
 }
 
+// Persists the Company Profile settings in localStorage so they survive
+// logging out, closing the tab, or reloading the page – unlike the rest of
+// the app's mock data, which is only kept in memory for the session.
+const EINSTELLUNGEN_STORAGE_KEY = 'bem-einstellungen'
+
+const ladeGespeicherteEinstellungen = () => {
+  if (typeof window === 'undefined') return EINSTELLUNGEN_DEFAULT
+  try {
+    const gespeichert = window.localStorage.getItem(EINSTELLUNGEN_STORAGE_KEY)
+    return gespeichert ? { ...EINSTELLUNGEN_DEFAULT, ...JSON.parse(gespeichert) } : EINSTELLUNGEN_DEFAULT
+  } catch {
+    return EINSTELLUNGEN_DEFAULT
+  }
+}
+
 function EinstellungenView({ gespeichert, onSpeichern }) {
   const [entwurf, setEntwurf] = useState(gespeichert)
   const [zeigeGespeichert, setZeigeGespeichert] = useState(false)
@@ -2165,7 +2180,7 @@ export default function App() {
   const [selectedStoreId, setSelectedStoreId] = useState(null)
   // Which Dashboard "Quick Actions" modal is open: 'store' | 'employee' | 'salary' | null
   const [quickModal, setQuickModal] = useState(null)
-  const [einstellungen, setEinstellungen] = useState(EINSTELLUNGEN_DEFAULT)
+  const [einstellungen, setEinstellungen] = useState(ladeGespeicherteEinstellungen)
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
   const [monatsDaten, setMonatsDaten] = useState({})
@@ -2173,6 +2188,18 @@ export default function App() {
   const handleAbmelden = () => {
     setIstAngemeldet(false)
     setActiveView('dashboard')
+  }
+
+  // Save the Company Profile settings, persisting them to localStorage so
+  // they're still there after logging out, closing the tab, or reloading
+  const handleEinstellungenSpeichern = (werte) => {
+    setEinstellungen(werte)
+    try {
+      window.localStorage.setItem(EINSTELLUNGEN_STORAGE_KEY, JSON.stringify(werte))
+    } catch {
+      // Ignore write failures (e.g. private browsing) – the settings still
+      // work for the rest of the session via React state.
+    }
   }
 
   // Power-up transition into the app after a successful login: a brief
@@ -2294,7 +2321,7 @@ export default function App() {
         return (
           <EinstellungenView
             gespeichert={einstellungen}
-            onSpeichern={setEinstellungen}
+            onSpeichern={handleEinstellungenSpeichern}
           />
         )
       default:
