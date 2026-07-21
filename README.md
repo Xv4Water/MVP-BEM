@@ -6,6 +6,9 @@ The entire user interface is in **English**.
 
 Built with **React**, **Tailwind CSS** and **lucide-react**.
 
+The app starts with no branches, employees, or company profile – it's a
+clean slate for adding real data rather than pre-loaded sample records.
+
 ## Features
 
 - **Login** – demo sign-in screen (Username: `Business`, Password: `Business123`)
@@ -39,7 +42,7 @@ Built with **React**, **Tailwind CSS** and **lucide-react**.
 
 ```
 src/
-  App.jsx    # Complete single-file application (mock data, views, layout)
+  App.jsx    # Complete single-file application (views, layout, state)
   main.jsx   # React entry point
   index.css  # Tailwind directives
 ```

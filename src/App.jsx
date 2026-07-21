@@ -34,27 +34,11 @@ import {
 /*  Realistic sample data for branches and employees                          */
 /* -------------------------------------------------------------------------- */
 
-const STORES = [
-  { id: 1, name: 'Central Branch', city: 'Berlin', state: 'Berlin' },
-  { id: 2, name: 'Old Town Branch', city: 'Munich', state: 'Bavaria' },
-  { id: 3, name: 'Harbour City Branch', city: 'Hamburg', state: 'Hamburg' },
-  { id: 4, name: 'Downtown Branch', city: 'Cologne', state: 'North Rhine-Westphalia' },
-]
+// The app starts with no branches or employees – the customer adds their
+// own real data from a clean slate rather than seeing sample records.
+const STORES = []
 
-const EMPLOYEES = [
-  { id: 1, firstName: 'Anna', lastName: 'Schmidt', storeId: 1, position: 'Branch Manager', salary: 4200, hours: 40 },
-  { id: 2, firstName: 'Lukas', lastName: 'Müller', storeId: 1, position: 'Sales Associate', salary: 2800, hours: 38 },
-  { id: 3, firstName: 'Sophie', lastName: 'Weber', storeId: 2, position: 'Branch Manager', salary: 4100, hours: 40 },
-  { id: 4, firstName: 'Jonas', lastName: 'Fischer', storeId: 2, position: 'Warehouse Assistant', salary: 2600, hours: 35 },
-  { id: 5, firstName: 'Marie', lastName: 'Wagner', storeId: 2, position: 'Sales Associate', salary: 2750, hours: 30 },
-  { id: 6, firstName: 'Felix', lastName: 'Becker', storeId: 3, position: 'Branch Manager', salary: 4300, hours: 40 },
-  { id: 7, firstName: 'Laura', lastName: 'Hoffmann', storeId: 3, position: 'Sales Associate', salary: 2900, hours: 40 },
-  { id: 8, firstName: 'Paul', lastName: 'Schäfer', storeId: 3, position: 'Part-Time Assistant', salary: 1400, hours: 20 },
-  { id: 9, firstName: 'Emma', lastName: 'Koch', storeId: 4, position: 'Branch Manager', salary: 4000, hours: 40 },
-  { id: 10, firstName: 'Tim', lastName: 'Richter', storeId: 4, position: 'Sales Associate', salary: 2850, hours: 38 },
-  { id: 11, firstName: 'Lena', lastName: 'Klein', storeId: 4, position: 'Part-Time Assistant', salary: 1300, hours: 18 },
-  { id: 12, firstName: 'Max', lastName: 'Wolf', storeId: 1, position: 'Warehouse Assistant', salary: 2650, hours: 37 },
-]
+const EMPLOYEES = []
 
 /* -------------------------------------------------------------------------- */
 /*  HELPER FUNCTIONS                                                          */
@@ -138,13 +122,6 @@ const speichereInLocalStorage = (key, wert) => {
   }
 }
 
-// Mock year-to-date payroll figures per branch, used for the Dashboard's
-// "Payroll by Branches" chart. Falls back to a deterministic estimate for
-// any branch beyond the four seeded ones.
-const MOCK_YTD_PAYROLL = { 1: 108500, 2: 94200, 3: 121300, 4: 87600 }
-const getMockYtdPayroll = (storeId) =>
-  MOCK_YTD_PAYROLL[storeId] ?? 90000 + ((storeId * 4300) % 35000)
-
 // Map a storeId to its branch
 const getStoreName = (storeId, storeList) =>
   storeList.find((s) => s.id === storeId)?.name ?? 'Unknown'
@@ -189,6 +166,25 @@ const MONTHS_SHORT = [
   'Nov',
   'Dec',
 ]
+
+// Total wages for a list of employees across all 12 months of a year,
+// using recorded salary payments where available and falling back to each
+// employee's base salary otherwise (same assumption used throughout the
+// app). Shared by the Dashboard's Staff Costs KPI (all employees) and its
+// "Payroll by Branches" chart (employees filtered to one branch).
+const berechneJahresGehaltssumme = (mitarbeiterListe, monatsDaten, jahr) =>
+  MONTHS.reduce((jahresSumme, _, monatIndex) => {
+    const monatsSumme = mitarbeiterListe.reduce((summe, m) => {
+      const eintrag = (monatsDaten[m.id] ?? []).find(
+        (e) => e.jahr === jahr && e.monat === monatIndex,
+      )
+      const gehalt = eintrag
+        ? eintrag.gehaelter.reduce((teilsumme, betrag) => teilsumme + betrag, 0)
+        : m.salary
+      return summe + gehalt
+    }, 0)
+    return jahresSumme + monatsSumme
+  }, 0)
 
 /* -------------------------------------------------------------------------- */
 /*  NAVIGATION                                                                */
@@ -664,18 +660,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
     // employee's recorded salary payments, falling back to their base salary
     // for months without an explicit entry (same assumption used everywhere
     // else in the app).
-    const personalkosten = MONTHS.reduce((jahresSumme, _, monatIndex) => {
-      const monatsSumme = mitarbeiter.reduce((summe, m) => {
-        const eintrag = (monatsDaten[m.id] ?? []).find(
-          (e) => e.jahr === currentYear && e.monat === monatIndex,
-        )
-        const gehalt = eintrag
-          ? eintrag.gehaelter.reduce((teilsumme, betrag) => teilsumme + betrag, 0)
-          : m.salary
-        return summe + gehalt
-      }, 0)
-      return jahresSumme + monatsSumme
-    }, 0)
+    const personalkosten = berechneJahresGehaltssumme(mitarbeiter, monatsDaten, currentYear)
 
     const teuersterMitarbeiter =
       gesamtMitarbeiter > 0
@@ -685,20 +670,24 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
     return { aktiveGeschaefte, gesamtMitarbeiter, personalkosten, teuersterMitarbeiter }
   }, [geschaefte, mitarbeiter, monatsDaten, currentYear])
 
-  // YTD payroll per branch for the bar chart (illustrative mock figures),
-  // ranked highest cost first
+  // Total wages paid this year per branch for the bar chart, ranked
+  // highest cost first
   const ytdPayrollProGeschaeft = useMemo(
     () =>
       geschaefte
         .map((g) => ({
           id: g.id,
           name: g.name,
-          betrag: getMockYtdPayroll(g.id),
+          betrag: berechneJahresGehaltssumme(
+            mitarbeiter.filter((m) => m.storeId === g.id),
+            monatsDaten,
+            currentYear,
+          ),
         }))
         .sort((a, b) => b.betrag - a.betrag),
-    [geschaefte],
+    [geschaefte, mitarbeiter, monatsDaten, currentYear],
   )
-  const PAYROLL_ACHSE_MAX = 150000
+  const PAYROLL_ACHSE_MAX = Math.max(...ytdPayrollProGeschaeft.map((d) => d.betrag), 1)
   // Up to this many branches, the columns stretch to fill the available
   // width; beyond it they switch to a fixed width with horizontal scroll.
   const PAYROLL_FIXED_WIDTH_SCHWELLE = 6
@@ -1666,9 +1655,9 @@ function VerlaufView({ aenderungen, onOeffnen, onWiederherstellen }) {
 /* -------------------------------------------------------------------------- */
 
 const EINSTELLUNGEN_DEFAULT = {
-  companyName: 'BEM Management GmbH',
-  email: 'info@bem-gmbh.de',
-  storeHq: 'Berlin',
+  companyName: '',
+  email: '',
+  storeHq: '',
   waehrung: 'Euro (€)',
 }
 
@@ -1729,6 +1718,7 @@ function EinstellungenView({ gespeichert, onSpeichern }) {
               type="text"
               value={entwurf.companyName}
               onChange={(e) => handleFeldAendern('companyName', e.target.value)}
+              placeholder="e.g. Your Company GmbH"
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
@@ -1740,6 +1730,7 @@ function EinstellungenView({ gespeichert, onSpeichern }) {
               type="email"
               value={entwurf.email}
               onChange={(e) => handleFeldAendern('email', e.target.value)}
+              placeholder="e.g. contact@yourcompany.com"
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
@@ -1751,6 +1742,7 @@ function EinstellungenView({ gespeichert, onSpeichern }) {
               type="text"
               value={entwurf.storeHq}
               onChange={(e) => handleFeldAendern('storeHq', e.target.value)}
+              placeholder="e.g. Berlin"
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-400 focus:border-lime-400/50 focus:bg-white/10 focus:ring-2 focus:ring-lime-400/20"
             />
           </div>
