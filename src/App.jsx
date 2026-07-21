@@ -25,6 +25,8 @@ import {
   TrendingUp,
   ChevronDown,
   History,
+  RotateCcw,
+  Check,
 } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
@@ -113,6 +115,27 @@ const getAktuellenBetrag = (mitarbeiterId, monatsDaten, basisGehalt) => {
   return letzterEintrag
     ? letzterEintrag.gehaelter.reduce((summe, g) => summe + g, 0)
     : basisGehalt
+}
+
+// Generic localStorage read/write helpers, wrapped in try/catch for
+// environments where it's unavailable (e.g. private browsing).
+const ladeAusLocalStorage = (key, fallback) => {
+  if (typeof window === 'undefined') return fallback
+  try {
+    const gespeichert = window.localStorage.getItem(key)
+    return gespeichert ? JSON.parse(gespeichert) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+const speichereInLocalStorage = (key, wert) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(wert))
+  } catch {
+    // Ignore write failures (e.g. private browsing) – the app still works
+    // for the rest of the session via React state.
+  }
 }
 
 // Mock year-to-date payroll figures per branch, used for the Dashboard's
@@ -1553,7 +1576,7 @@ const formatVerlaufZeitpunkt = (zeitstempel) => {
   })}`
 }
 
-function VerlaufView({ aenderungen, onOeffnen }) {
+function VerlaufView({ aenderungen, onOeffnen, onWiederherstellen }) {
   const anzahlProKategorie = useMemo(() => {
     return aenderungen.reduce(
       (zaehler, a) => {
@@ -1585,10 +1608,15 @@ function VerlaufView({ aenderungen, onOeffnen }) {
             const meta = AENDERUNGSKATEGORIEN[a.kategorie]
             const Icon = meta.icon
             return (
-              <button
+              <div
                 key={a.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => onOeffnen(a)}
-                className="flex w-full items-center gap-4 rounded-2xl px-2 py-3.5 text-left transition-colors hover:bg-white/5"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') onOeffnen(a)
+                }}
+                className="flex w-full cursor-pointer items-center gap-4 rounded-2xl px-2 py-3.5 text-left transition-colors hover:bg-white/5"
               >
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${meta.accent}`}
@@ -1599,7 +1627,26 @@ function VerlaufView({ aenderungen, onOeffnen }) {
                   <p className="truncate text-sm font-medium text-white">{a.text}</p>
                   <p className="text-xs text-slate-500">{formatVerlaufZeitpunkt(a.zeitpunkt)}</p>
                 </div>
-              </button>
+                <div className="ml-auto shrink-0">
+                  {a.wiederhergestellt ? (
+                    <span className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-500">
+                      <Check className="h-3.5 w-3.5" />
+                      Restored
+                    </span>
+                  ) : (
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onWiederherstellen(a)
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-lime-400/30 hover:bg-lime-400/10 hover:text-lime-400"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      Restore
+                    </button>
+                  )}
+                </div>
+              </div>
             )
           })}
 
@@ -1630,15 +1677,10 @@ const EINSTELLUNGEN_DEFAULT = {
 // the app's mock data, which is only kept in memory for the session.
 const EINSTELLUNGEN_STORAGE_KEY = 'bem-einstellungen'
 
-const ladeGespeicherteEinstellungen = () => {
-  if (typeof window === 'undefined') return EINSTELLUNGEN_DEFAULT
-  try {
-    const gespeichert = window.localStorage.getItem(EINSTELLUNGEN_STORAGE_KEY)
-    return gespeichert ? { ...EINSTELLUNGEN_DEFAULT, ...JSON.parse(gespeichert) } : EINSTELLUNGEN_DEFAULT
-  } catch {
-    return EINSTELLUNGEN_DEFAULT
-  }
-}
+const ladeGespeicherteEinstellungen = () => ({
+  ...EINSTELLUNGEN_DEFAULT,
+  ...ladeAusLocalStorage(EINSTELLUNGEN_STORAGE_KEY, {}),
+})
 
 function EinstellungenView({ gespeichert, onSpeichern }) {
   const [entwurf, setEntwurf] = useState(gespeichert)
@@ -2369,13 +2411,35 @@ const VIEW_TITEL = {
   einstellungen: 'Settings',
 }
 
+// Branches, employees, and their monthly salary data persist in localStorage
+// (like Settings) so the History log's entries stay consistent with the
+// underlying data across reloads – a "Restore" can otherwise reference
+// records that no longer match the app's in-memory state.
+const MITARBEITER_STORAGE_KEY = 'bem-mitarbeiter'
+const GESCHAEFTE_STORAGE_KEY = 'bem-geschaefte'
+const MONATSDATEN_STORAGE_KEY = 'bem-monatsdaten'
+
+const ladeGespeicherteMitarbeiter = () => ladeAusLocalStorage(MITARBEITER_STORAGE_KEY, EMPLOYEES)
+const ladeGespeicherteGeschaefte = () => ladeAusLocalStorage(GESCHAEFTE_STORAGE_KEY, STORES)
+const ladeGespeicherteMonatsDaten = () => ladeAusLocalStorage(MONATSDATEN_STORAGE_KEY, {})
+
+// The History log keeps entries for up to 7 days, persisted in
+// localStorage; older entries are pruned whenever the log loads or changes.
+const AENDERUNGEN_STORAGE_KEY = 'bem-aenderungen'
+const AENDERUNGEN_MAX_ALTER_MS = 7 * 24 * 60 * 60 * 1000
+
+const ladeGespeicherteAenderungen = () => {
+  const grenze = Date.now() - AENDERUNGEN_MAX_ALTER_MS
+  return ladeAusLocalStorage(AENDERUNGEN_STORAGE_KEY, []).filter((a) => a.zeitpunkt >= grenze)
+}
+
 export default function App() {
   const [istAngemeldet, setIstAngemeldet] = useState(false)
   const [poweringUp, setPoweringUp] = useState(false)
   const [activeView, setActiveView] = useState('dashboard')
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [mitarbeiter, setMitarbeiter] = useState(EMPLOYEES)
-  const [geschaefte, setGeschaefte] = useState(STORES)
+  const [mitarbeiter, setMitarbeiter] = useState(ladeGespeicherteMitarbeiter)
+  const [geschaefte, setGeschaefte] = useState(ladeGespeicherteGeschaefte)
   const [selectedStoreId, setSelectedStoreId] = useState(null)
   // Employee to jump straight to when a branch modal is opened via the
   // header search (rather than by clicking a branch card)
@@ -2385,29 +2449,50 @@ export default function App() {
   const [einstellungen, setEinstellungen] = useState(ladeGespeicherteEinstellungen)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Log of recent changes shown on the History page, newest first
-  const [aenderungen, setAenderungen] = useState([])
-  const naechsteAenderungId = useRef(1)
+  // Log of recent changes shown on the History page, newest first, kept
+  // for up to 7 days (see AENDERUNGEN_MAX_ALTER_MS)
+  const [aenderungen, setAenderungen] = useState(ladeGespeicherteAenderungen)
+  const naechsteAenderungId = useRef(Math.max(0, ...aenderungen.map((a) => a.id)) + 1)
 
-  // Record a change for the History page. Keeps only the most recent 50
-  // entries so the log doesn't grow unbounded over a long session.
-  const protokolliereAenderung = (kategorie, text, navigationsziel) => {
+  // Record a change for the History page, along with whatever data
+  // (`daten`) handleWiederherstellen needs to reverse it later.
+  const protokolliereAenderung = (kategorie, subtyp, text, navigationsziel, daten) => {
+    const grenze = Date.now() - AENDERUNGEN_MAX_ALTER_MS
     setAenderungen((prev) =>
       [
         {
           id: naechsteAenderungId.current++,
           kategorie,
+          subtyp,
           text,
           navigationsziel,
+          daten,
+          wiederhergestellt: false,
           zeitpunkt: Date.now(),
         },
         ...prev,
-      ].slice(0, 50),
+      ].filter((a) => a.zeitpunkt >= grenze),
     )
   }
 
   // Monthly data per employee: { [employeeId]: [{ jahr, monat, gehaelter: number[] (max. 4), stunden }] }
-  const [monatsDaten, setMonatsDaten] = useState({})
+  const [monatsDaten, setMonatsDaten] = useState(ladeGespeicherteMonatsDaten)
+
+  // Persist branches, employees, their monthly data, and the change log to
+  // localStorage so they (and the History log's ability to restore them)
+  // survive logging out, closing the tab, or reloading the page.
+  useEffect(() => {
+    speichereInLocalStorage(MITARBEITER_STORAGE_KEY, mitarbeiter)
+  }, [mitarbeiter])
+  useEffect(() => {
+    speichereInLocalStorage(GESCHAEFTE_STORAGE_KEY, geschaefte)
+  }, [geschaefte])
+  useEffect(() => {
+    speichereInLocalStorage(MONATSDATEN_STORAGE_KEY, monatsDaten)
+  }, [monatsDaten])
+  useEffect(() => {
+    speichereInLocalStorage(AENDERUNGEN_STORAGE_KEY, aenderungen)
+  }, [aenderungen])
 
   // Header search: matches employees by name, position, branch, or their
   // current salary amount (as a plain number or in the selected currency),
@@ -2493,15 +2578,23 @@ export default function App() {
     return <LoginView onLogin={handleAnmelden} />
   }
 
-  // Remove an employee from state
+  // Remove an employee from state, along with their recorded monthly data
   const handleDelete = (id) => {
     const entfernterMitarbeiter = mitarbeiter.find((m) => m.id === id)
+    const entfernteMonatsEintraege = monatsDaten[id] ?? []
     setMitarbeiter((prev) => prev.filter((m) => m.id !== id))
+    setMonatsDaten((prev) => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
     if (entfernterMitarbeiter) {
       protokolliereAenderung(
         'employee',
+        'removed',
         `Employee removed: ${entfernterMitarbeiter.firstName} ${entfernterMitarbeiter.lastName}`,
         { storeId: entfernterMitarbeiter.storeId },
+        { mitarbeiter: entfernterMitarbeiter, monatsEintraege: entfernteMonatsEintraege },
       )
     }
   }
@@ -2512,8 +2605,10 @@ export default function App() {
       const neueId = Math.max(0, ...prev.map((m) => m.id)) + 1
       protokolliereAenderung(
         'employee',
+        'created',
         `New employee added: ${daten.firstName} ${daten.lastName}`,
         { storeId: daten.storeId, mitarbeiterId: neueId },
+        { mitarbeiterId: neueId },
       )
       return [...prev, { id: neueId, ...daten }]
     })
@@ -2523,7 +2618,13 @@ export default function App() {
   const handleGeschaeftHinzufuegen = (name, city, state) => {
     setGeschaefte((prev) => {
       const neueId = Math.max(0, ...prev.map((g) => g.id)) + 1
-      protokolliereAenderung('branch', `New branch added: ${name}`, { storeId: neueId })
+      protokolliereAenderung(
+        'branch',
+        'created',
+        `New branch added: ${name}`,
+        { storeId: neueId },
+        { branchId: neueId },
+      )
       return [...prev, { id: neueId, name, city, state }]
     })
   }
@@ -2531,9 +2632,12 @@ export default function App() {
   // Remove a branch, along with its employees and their recorded monthly data
   const handleGeschaeftLoeschen = (id) => {
     const entferntesGeschaeft = geschaefte.find((g) => g.id === id)
-    const entfernteMitarbeiterIds = mitarbeiter
-      .filter((m) => m.storeId === id)
-      .map((m) => m.id)
+    const entfernteMitarbeiterListe = mitarbeiter.filter((m) => m.storeId === id)
+    const entfernteMitarbeiterIds = entfernteMitarbeiterListe.map((m) => m.id)
+    const entfernteMonatsDatenMap = {}
+    entfernteMitarbeiterIds.forEach((mitarbeiterId) => {
+      if (monatsDaten[mitarbeiterId]) entfernteMonatsDatenMap[mitarbeiterId] = monatsDaten[mitarbeiterId]
+    })
 
     setGeschaefte((prev) => prev.filter((g) => g.id !== id))
     setMitarbeiter((prev) => prev.filter((m) => m.storeId !== id))
@@ -2547,16 +2651,30 @@ export default function App() {
     setSelectedStoreId((prev) => (prev === id ? null : prev))
     setPendingEmployeeId((prev) => (entfernteMitarbeiterIds.includes(prev) ? null : prev))
     if (entferntesGeschaeft) {
-      protokolliereAenderung('branch', `Branch removed: ${entferntesGeschaeft.name}`, null)
+      protokolliereAenderung(
+        'branch',
+        'removed',
+        `Branch removed: ${entferntesGeschaeft.name}`,
+        null,
+        {
+          branch: entferntesGeschaeft,
+          mitarbeiterListe: entfernteMitarbeiterListe,
+          monatsDatenMap: entfernteMonatsDatenMap,
+        },
+      )
     }
   }
 
   // Save a monthly entry (up to four salary payments + hours worked) for
   // an employee, or update it if one already exists for that month/year
   const handleMonatSpeichern = (mitarbeiterId, jahr, monat, gehaelter, stunden) => {
+    const bestehendeEintraege = monatsDaten[mitarbeiterId] ?? []
+    const vorherigerEintrag =
+      bestehendeEintraege.find((e) => e.jahr === jahr && e.monat === monat) ?? null
+
     setMonatsDaten((prev) => {
-      const bestehendeEintraege = prev[mitarbeiterId] ?? []
-      const ohneAktuellenMonat = bestehendeEintraege.filter(
+      const bestehend = prev[mitarbeiterId] ?? []
+      const ohneAktuellenMonat = bestehend.filter(
         (e) => !(e.jahr === jahr && e.monat === monat),
       )
       return {
@@ -2569,8 +2687,10 @@ export default function App() {
       const gesamtbetrag = gehaelter.reduce((summe, g) => summe + g, 0)
       protokolliereAenderung(
         'salary',
+        'updated',
         `Salary recorded for ${betroffenerMitarbeiter.firstName} ${betroffenerMitarbeiter.lastName}: ${formatCurrency(gesamtbetrag, einstellungen.waehrung)} (${MONTHS[monat]} ${jahr})`,
         { storeId: betroffenerMitarbeiter.storeId, mitarbeiterId },
+        { mitarbeiterId, jahr, monat, vorherigerEintrag },
       )
     }
   }
@@ -2598,6 +2718,73 @@ export default function App() {
     setActiveView('geschaefte')
     setSelectedStoreId(aenderung.navigationsziel?.storeId ?? null)
     setPendingEmployeeId(aenderung.navigationsziel?.mitarbeiterId ?? null)
+  }
+
+  // Reverse a logged change: re-create what was deleted, delete what was
+  // created, or revert a salary entry to its value before the change.
+  const handleWiederherstellen = (aenderung) => {
+    if (aenderung.wiederhergestellt) return
+
+    if (aenderung.kategorie === 'branch' && aenderung.subtyp === 'created') {
+      const { branchId } = aenderung.daten
+      const betroffeneMitarbeiterIds = mitarbeiter
+        .filter((m) => m.storeId === branchId)
+        .map((m) => m.id)
+      setGeschaefte((prev) => prev.filter((g) => g.id !== branchId))
+      setMitarbeiter((prev) => prev.filter((m) => m.storeId !== branchId))
+      setMonatsDaten((prev) => {
+        const next = { ...prev }
+        betroffeneMitarbeiterIds.forEach((mitarbeiterId) => delete next[mitarbeiterId])
+        return next
+      })
+    } else if (aenderung.kategorie === 'branch' && aenderung.subtyp === 'removed') {
+      const { branch, mitarbeiterListe, monatsDatenMap } = aenderung.daten
+      setGeschaefte((prev) => (prev.some((g) => g.id === branch.id) ? prev : [...prev, branch]))
+      setMitarbeiter((prev) => {
+        const vorhandeneIds = new Set(prev.map((m) => m.id))
+        return [...prev, ...mitarbeiterListe.filter((m) => !vorhandeneIds.has(m.id))]
+      })
+      setMonatsDaten((prev) => ({ ...monatsDatenMap, ...prev }))
+    } else if (aenderung.kategorie === 'employee' && aenderung.subtyp === 'created') {
+      const { mitarbeiterId } = aenderung.daten
+      setMitarbeiter((prev) => prev.filter((m) => m.id !== mitarbeiterId))
+      setMonatsDaten((prev) => {
+        const next = { ...prev }
+        delete next[mitarbeiterId]
+        return next
+      })
+    } else if (aenderung.kategorie === 'employee' && aenderung.subtyp === 'removed') {
+      const { mitarbeiter: wiederherzustellenderMitarbeiter, monatsEintraege } = aenderung.daten
+      setMitarbeiter((prev) =>
+        prev.some((m) => m.id === wiederherzustellenderMitarbeiter.id)
+          ? prev
+          : [...prev, wiederherzustellenderMitarbeiter],
+      )
+      if (monatsEintraege?.length) {
+        setMonatsDaten((prev) => ({
+          ...prev,
+          [wiederherzustellenderMitarbeiter.id]: monatsEintraege,
+        }))
+      }
+    } else if (aenderung.kategorie === 'salary' && aenderung.subtyp === 'updated') {
+      const { mitarbeiterId, jahr, monat, vorherigerEintrag } = aenderung.daten
+      setMonatsDaten((prev) => {
+        const bestehend = prev[mitarbeiterId] ?? []
+        const ohneAktuellenMonat = bestehend.filter(
+          (e) => !(e.jahr === jahr && e.monat === monat),
+        )
+        return {
+          ...prev,
+          [mitarbeiterId]: vorherigerEintrag
+            ? [...ohneAktuellenMonat, vorherigerEintrag]
+            : ohneAktuellenMonat,
+        }
+      })
+    }
+
+    setAenderungen((prev) =>
+      prev.map((a) => (a.id === aenderung.id ? { ...a, wiederhergestellt: true } : a)),
+    )
   }
 
   const renderView = () => {
@@ -2632,7 +2819,13 @@ export default function App() {
           />
         )
       case 'verlauf':
-        return <VerlaufView aenderungen={aenderungen} onOeffnen={handleOeffneAenderung} />
+        return (
+          <VerlaufView
+            aenderungen={aenderungen}
+            onOeffnen={handleOeffneAenderung}
+            onWiederherstellen={handleWiederherstellen}
+          />
+        )
       case 'einstellungen':
         return (
           <EinstellungenView
