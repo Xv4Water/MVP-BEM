@@ -545,6 +545,9 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
     [geschaefte],
   )
   const PAYROLL_ACHSE_MAX = 150000
+  // Up to this many branches, the columns stretch to fill the available
+  // width; beyond it they switch to a fixed width with horizontal scroll.
+  const PAYROLL_FIXED_WIDTH_SCHWELLE = 6
 
   return (
     <div className="space-y-6">
@@ -606,13 +609,16 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
             <p className="text-sm text-slate-500">No branches created yet.</p>
           )}
           {ytdPayrollProGeschaeft.length > 0 && (
-            <div
-              className={`flex items-end gap-6 overflow-x-auto pb-2 ${
-                ytdPayrollProGeschaeft.length <= 6 ? 'justify-center' : 'justify-start'
-              }`}
-            >
+            <div className="flex items-end gap-6 overflow-x-auto pb-2">
               {ytdPayrollProGeschaeft.map((d) => (
-                <div key={d.id} className="flex w-16 shrink-0 flex-col items-center sm:w-20">
+                <div
+                  key={d.id}
+                  className={
+                    ytdPayrollProGeschaeft.length <= PAYROLL_FIXED_WIDTH_SCHWELLE
+                      ? 'flex max-w-[140px] flex-1 flex-col items-center'
+                      : 'flex w-16 shrink-0 flex-col items-center sm:w-20'
+                  }
+                >
                   <span className="mb-2 text-xs font-semibold text-white">
                     {formatMoney(d.betrag)}
                   </span>
@@ -627,7 +633,7 @@ function DashboardView({ geschaefte, mitarbeiter, monatsDaten, onQuickAction }) 
                       }}
                     />
                   </div>
-                  <span className="mt-3 text-center text-xs font-medium text-slate-400">
+                  <span className="mt-3 min-h-[2.25rem] text-center text-xs font-medium text-slate-400">
                     {d.name}
                   </span>
                 </div>
